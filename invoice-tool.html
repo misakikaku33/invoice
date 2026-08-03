@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>はじめての請求書 | 出演者のための請求書作成ツール</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+:root{
+  --ink:#17304A;        /* 藍 */
+  --ink-soft:#3D5A7A;
+  --paper:#F7F4EC;      /* 生成り */
+  --card:#FFFFFF;
+  --shu:#C73E2E;        /* 朱肉 */
+  --shu-soft:#FBEDEA;
+  --sumi:#2A2A2A;
+  --muted:#7C8A99;
+  --line:#E3DED2;
+  --ok:#3E7A52;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'Noto Sans JP',sans-serif;
+  background:var(--paper);
+  color:var(--sumi);
+  line-height:1.7;
+  font-size:15px;
+}
+.app{max-width:760px;margin:0 auto;padding:20px 16px 80px}
+
+/* ---------- header ---------- */
+header.top{
+  text-align:center;
+  padding:28px 0 20px;
+}
+header.top .kicker{
+  font-size:12px;letter-spacing:.25em;color:var(--ink-soft);
+  text-transform:uppercase;margin-bottom:6px;
+}
+header.top h1{
+  font-family:'Shippori Mincho',serif;
+  font-size:clamp(24px,6vw,32px);
+  color:var(--ink);
+  font-weight:700;
+  letter-spacing:.08em;
+}
+header.top p.lead{
+  margin-top:10px;font-size:13.5px;color:var(--ink-soft);
+}
+
+/* ---------- progress (stamp rail) ---------- */
+.rail{
+  display:flex;justify-content:center;gap:6px;
+  align-items:center;margin:18px 0 26px;flex-wrap:wrap;
+}
+.rail .stamp{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;color:var(--muted);
+}
+.rail .stamp .circle{
+  width:30px;height:30px;border-radius:50%;
+  border:2px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Shippori Mincho',serif;font-weight:700;font-size:13px;
+  color:var(--muted);background:#fff;
+  transition:all .3s ease;
+}
+.rail .stamp.done .circle{
+  border-color:var(--shu);color:#fff;background:var(--shu);
+  transform:rotate(-8deg);
+  box-shadow:0 1px 4px rgba(199,62,46,.35);
+}
+.rail .stamp.done{color:var(--shu)}
+.rail .dash{width:16px;height:2px;background:var(--line);border-radius:2px}
+
+/* ---------- section cards ---------- */
+section.step{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:22px 18px;
+  margin-bottom:22px;
+  box-shadow:0 1px 3px rgba(23,48,74,.05);
+}
+.step-head{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.step-head .num{
+  font-family:'Shippori Mincho',serif;
+  color:var(--shu);font-weight:700;font-size:15px;
+  border:1.5px solid var(--shu);border-radius:50%;
+  width:28px;height:28px;min-width:28px;
+  display:flex;align-items:center;justify-content:center;
+  transform:rotate(-6deg);
+}
+.step-head h2{
+  font-family:'Shippori Mincho',serif;
+  font-size:19px;color:var(--ink);font-weight:600;letter-spacing:.05em;
+}
+.step-desc{font-size:13px;color:var(--muted);margin-bottom:16px}
+
+/* ---------- guide box ---------- */
+details.guide{
+  background:var(--shu-soft);
+  border-radius:10px;
+  padding:10px 14px;
+  margin:10px 0 14px;
+  font-size:13px;
+}
+details.guide summary{
+  cursor:pointer;font-weight:700;color:var(--shu);
+  font-size:13px;list-style:none;
+  display:flex;align-items:center;gap:6px;
+}
+details.guide summary::-webkit-details-marker{display:none}
+details.guide summary::before{content:"❓";font-size:12px}
+details.guide[open] summary{margin-bottom:6px}
+details.guide p{margin:6px 0;color:#5A3530}
+details.guide p b{color:var(--shu)}
+
+/* ---------- form ---------- */
+.field{margin-bottom:14px}
+.field label{
+  display:block;font-size:13px;font-weight:700;
+  color:var(--ink);margin-bottom:5px;
+}
+.field label .opt{
+  font-size:11px;font-weight:500;color:#fff;background:var(--muted);
+  border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px;
+}
+.field label .req{
+  font-size:11px;font-weight:500;color:#fff;background:var(--shu);
+  border-radius:4px;padding:1px 6px;margin-left:6px;vertical-align:1px;
+}
+.field input[type=text],.field input[type=date],.field input[type=number],
+.field textarea,.field select{
+  width:100%;
+  border:1.5px solid var(--line);
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:15px;
+  font-family:inherit;
+  background:#FDFCF9;
+  color:var(--sumi);
+}
+.field input:focus,.field textarea:focus,.field select:focus{
+  outline:2px solid var(--ink-soft);outline-offset:1px;border-color:var(--ink-soft);
+}
+.field .hint{font-size:12px;color:var(--muted);margin-top:4px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){.grid2{grid-template-columns:1fr}}
+
+/* toggle & radio pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pills label{
+  border:1.5px solid var(--line);border-radius:999px;
+  padding:7px 14px;font-size:13px;cursor:pointer;
+  background:#fff;color:var(--ink-soft);font-weight:500;
+  display:flex;align-items:center;gap:6px;
+  transition:all .15s ease;
+}
+.pills input{display:none}
+.pills label:has(input:checked){
+  background:var(--ink);color:#fff;border-color:var(--ink);
+}
+.checkline{display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;font-weight:500;color:var(--ink)}
+.checkline input{width:18px;height:18px;accent-color:var(--shu)}
+
+/* preset button */
+.preset-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;border:1.5px solid var(--ink);
+  color:var(--ink);border-radius:999px;
+  padding:9px 18px;font-size:14px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  transition:all .15s ease;
+}
+.preset-btn:hover{background:var(--ink);color:#fff}
+.preset-btn.active{background:var(--ink);color:#fff}
+.preset-btn.ghost{border-color:var(--muted);color:var(--muted)}
+.preset-btn.ghost:hover{background:var(--muted);color:#fff}
+
+/* items cards */
+.item-card{
+  border:1.5px solid var(--line);border-radius:10px;
+  padding:10px;margin-bottom:10px;background:#FDFCF9;
+}
+.item-card input,.item-card select{
+  border:1.5px solid var(--line);border-radius:8px;
+  padding:9px 10px;font-size:14px;font-family:inherit;
+  background:#fff;width:100%;color:var(--sumi);
+}
+.item-card input:focus,.item-card select:focus{outline:2px solid var(--ink-soft);outline-offset:1px}
+.ic-top{display:flex;gap:6px;margin-bottom:8px;align-items:center}
+.ic-top input{flex:1}
+.ic-bottom{display:grid;grid-template-columns:1.25fr .65fr 1fr .9fr;gap:8px;align-items:end}
+@media(max-width:520px){.ic-bottom{grid-template-columns:1fr 1fr}}
+.ic-f label{font-size:11px;color:var(--muted);font-weight:700;display:block;margin-bottom:3px}
+.ic-amt{text-align:right}
+.ic-amt .v{
+  font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink);
+  padding:9px 2px;display:block;font-size:15px;
+}
+.item-card .del{
+  border:none;background:none;color:var(--muted);
+  font-size:20px;cursor:pointer;padding:4px 8px;line-height:1;
+}
+.item-card .del:hover{color:var(--shu)}
+.add-row{
+  border:1.5px dashed var(--line);background:none;color:var(--ink-soft);
+  border-radius:8px;padding:9px;width:100%;cursor:pointer;
+  font-size:13.5px;font-weight:700;font-family:inherit;
+}
+.add-row:hover{border-color:var(--ink-soft);background:#fff}
+
+/* calc summary */
+.calc{
+  background:var(--paper);border-radius:10px;
+  padding:14px 16px;margin-top:14px;font-size:14px;
+}
+.calc .row{display:flex;justify-content:space-between;padding:3px 0}
+.calc .row.total{
+  border-top:2px solid var(--ink);margin-top:8px;padding-top:9px;
+  font-weight:700;font-size:16px;color:var(--ink);
+}
+.calc .row .minus{color:var(--shu)}
+.calc .num{font-variant-numeric:tabular-nums;font-weight:500}
+
+/* ---------- preview ---------- */
+.preview-wrap{
+  background:#DDD8CB;
+  border-radius:var(--radius);
+  padding:16px;overflow:hidden;
+}
+.sheet-scaler{transform-origin:top left}
+
+/* ---------- action buttons ---------- */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{
+  flex:1;min-width:150px;
+  border:none;border-radius:10px;
+  padding:14px 18px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .1s ease;
+}
+.btn:active{transform:scale(.98)}
+.btn.primary{background:var(--shu);color:#fff;box-shadow:0 2px 8px rgba(199,62,46,.3)}
+.btn.secondary{background:var(--ink);color:#fff}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.save-note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
+
+/* warn */
+.warnbox{
+  display:none;background:#FFF6E5;border:1px solid #EAD9AE;
+  border-radius:10px;padding:10px 14px;font-size:13px;color:#7A5A18;
+  margin-bottom:12px;
+}
+.warnbox.show{display:block}
+
+footer.foot{
+  text-align:center;font-size:11.5px;color:var(--muted);
+  margin-top:30px;line-height:1.9;
+}
+
+/* =========================================================
+   INVOICE SHEET (A4 = 794 x 1123 @96dpi)
+   ========================================================= */
+#invoiceSheet{
+  width:794px;min-height:1123px;
+  background:#fff;color:#1a1a1a;
+  padding:56px 60px;
+  font-family:'Noto Sans JP',sans-serif;
+  font-size:13px;line-height:1.6;
+  position:relative;
+}
+#invoiceSheet .inv-title{
+  font-family:'Shippori Mincho',serif;
+  font-size:30px;letter-spacing:.55em;text-indent:.55em;
+  text-align:center;font-weight:600;
+  border-bottom:2.5px solid #1a1a1a;
+  padding-bottom:10px;margin-bottom:28px;
+}
+#invoiceSheet .inv-meta{
+  position:absolute;top:56px;right:60px;
+  font-size:12px;text-align:right;line-height:1.8;
+}
+#invoiceSheet .inv-cols{display:flex;justify-content:space-between;gap:30px;margin-bottom:24px}
+#invoiceSheet .inv-to{flex:1;min-width:0}
+#invoiceSheet .inv-to .to-name{
+  font-size:19px;font-weight:700;
+  border-bottom:1.5px solid #1a1a1a;
+  padding-bottom:5px;margin-bottom:8px;
+}
+#invoiceSheet .inv-to .to-addr{font-size:12px;color:#333;white-space:pre-line}
+#invoiceSheet .inv-from{width:275px;font-size:12px;line-height:1.8}
+#invoiceSheet .inv-from .from-name{font-size:15px;font-weight:700}
+#invoiceSheet .inv-subject{margin-bottom:6px;font-size:13px}
+#invoiceSheet .inv-greeting{font-size:12.5px;margin-bottom:16px}
+#invoiceSheet .inv-amountbox{
+  display:flex;align-items:baseline;gap:18px;
+  border:2px solid #1a1a1a;
+  padding:12px 22px;margin-bottom:24px;
+  width:fit-content;min-width:340px;
+}
+#invoiceSheet .inv-amountbox .lbl{font-size:14px;font-weight:700;letter-spacing:.2em}
+#invoiceSheet .inv-amountbox .val{
+  font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;
+  margin-left:auto;
+}
+#invoiceSheet table.inv-items{width:100%;border-collapse:collapse;margin-bottom:0}
+#invoiceSheet table.inv-items th{
+  background:#EFEDE6;border:1px solid #999;
+  font-size:12px;padding:7px 10px;font-weight:700;
+}
+#invoiceSheet table.inv-items td{
+  border:1px solid #999;padding:7px 10px;font-size:12.5px;
+}
+#invoiceSheet table.inv-items td.r{text-align:right;font-variant-numeric:tabular-nums}
+#invoiceSheet table.inv-items td.c{text-align:center}
+#invoiceSheet table.inv-totals{
+  border-collapse:collapse;margin-left:auto;margin-top:-1px;
+}
+#invoiceSheet table.inv-totals td{
+  border:1px solid #999;padding:6px 10px;font-size:12.5px;
+}
+#invoiceSheet table.inv-totals td.lbl{background:#EFEDE6;font-weight:700;width:150px}
+#invoiceSheet table.inv-totals td.val{width:150px;text-align:right;font-variant-numeric:tabular-nums}
+#invoiceSheet table.inv-totals tr.grand td{font-weight:700;font-size:14px}
+#invoiceSheet .inv-bank{
+  margin-top:26px;border:1px solid #999;
+  padding:12px 16px;font-size:12.5px;width:fit-content;min-width:340px;
+}
+#invoiceSheet .inv-bank .bank-title{font-weight:700;font-size:12px;margin-bottom:4px;letter-spacing:.1em}
+#invoiceSheet .inv-notes{margin-top:22px;font-size:12px;color:#333;white-space:pre-line}
+#invoiceSheet .inv-notes .notes-title{font-weight:700;margin-bottom:2px}
+
+/* ---------- print ---------- */
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .app{display:none!important}
+  #printArea{display:block!important;position:static!important}
+  #invoiceSheet{width:210mm;min-height:296mm;padding:15mm 16mm;margin:0}
+  .sheet-scaler{transform:none!important;width:auto!important;height:auto!important}
+  .preview-wrap{all:unset}
+}
+#printArea{position:relative}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="app">
+<header class="top">
+  <div class="kicker">Invoice Guide for Performers</div>
+  <h1>はじめての請求書</h1>
+  <p class="lead">出演料の請求書を、解説つきで一歩ずつ作れるツールです。<br>入力するとページ下のプレビューにすぐ反映されます。</p>
+</header>
+
+<div class="rail" id="rail">
+  <div class="stamp" data-step="1"><div class="circle">一</div><span>あなた</span></div>
+  <div class="dash"></div>
+  <div class="stamp" data-step="2"><div class="circle">二</div><span>宛先</span></div>
+  <div class="dash"></div>
+  <div class="stamp" data-step="3"><div class="circle">三</div><span>内容</span></div>
+  <div class="dash"></div>
+  <div class="stamp" data-step="4"><div class="circle">四</div><span>出力</span></div>
+</div>
+
+<details class="guide" style="background:#EEF2F7">
+  <summary style="color:var(--ink)">そもそも請求書ってなに?(最初に1分だけ)</summary>
+  <p style="color:var(--ink-soft)">請求書は「<b style="color:var(--ink)">この仕事をしたので、この金額を支払ってください</b>」と正式にお願いする書類です。フリーランスの出演者は、出演料を受け取るために主催者へ請求書を出すのが基本の流れです。</p>
+  <p style="color:var(--ink-soft)">難しく考えなくて大丈夫。<b style="color:var(--ink)">「誰が・誰に・何の代金を・いくら・どこに振り込んでほしいか」</b>が書いてあれば請求書として成立します。このツールはその5つを順番に埋めていくだけです。</p>
+</details>
+
+<!-- ================= STEP 1 ================= -->
+<section class="step" id="step1">
+  <div class="step-head"><div class="num">一</div><h2>あなたの情報(差出人)</h2></div>
+  <p class="step-desc">「誰からの請求か」を伝える部分です。</p>
+
+  <div class="field">
+    <label>お名前<span class="req">必須</span></label>
+    <input type="text" id="fromName" placeholder="例:岬 花子(芸名:美咲 はな)">
+    <div class="hint">振込先の口座名義と請求者名が一致していると経理処理がスムーズです。芸名で活動している方は「本名(芸名:◯◯)」の併記が安心です。</div>
+  </div>
+
+  <details class="guide">
+    <summary>芸名と本名、どっちで書く?</summary>
+    <p>支払う側は「口座名義」と「請求者」が同じ人か確認します。口座は本名のはずなので、<b>本名を書き、芸名をカッコで添える</b>のがいちばんトラブルがありません。</p>
+  </details>
+
+  <div class="field">
+    <label>住所<span class="opt">推奨</span></label>
+    <input type="text" id="fromAddr" placeholder="例:〒150-0000 東京都渋谷区◯◯ 1-2-3">
+    <div class="hint">正式な書類として扱ってもらうために書くのが一般的です。</div>
+  </div>
+
+  <div class="grid2">
+    <div class="field">
+      <label>電話番号<span class="opt">任意</span></label>
+      <input type="text" id="fromTel" placeholder="例:090-0000-0000">
+    </div>
+    <div class="field">
+      <label>メールアドレス<span class="opt">任意</span></label>
+      <input type="text" id="fromMail" placeholder="例:hana@example.com">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>インボイス登録番号<span class="opt">任意</span></label>
+    <input type="text" id="fromInvoiceNo" placeholder="例:T1234567890123">
+    <div class="hint">登録していない方(免税事業者)は空欄のままでOKです。</div>
+  </div>
+
+  <details class="guide">
+    <summary>インボイス登録番号ってなに?書かないとダメ?</summary>
+    <p>税務署に「適格請求書発行事業者」として登録した人だけが持つ、<b>Tから始まる13桁の番号</b>です。</p>
+    <p>登録していない(=免税事業者の)方は<b>空欄で問題ありません</b>。書かなくても請求書は有効ですし、出演料も請求できます。「登録番号を教えてください」と言われたときに初めて考えれば大丈夫です。</p>
+  </details>
+
+  <div class="field">
+    <label>振込先口座<span class="req">必須</span></label>
+    <div class="grid2">
+      <input type="text" id="bankName" placeholder="銀行名(例:◯◯銀行)">
+      <input type="text" id="bankBranch" placeholder="支店名(例:渋谷支店)">
+    </div>
+    <div class="grid2" style="margin-top:8px">
+      <input type="text" id="bankType" placeholder="種別・口座番号(例:普通 1234567)">
+      <input type="text" id="bankHolder" placeholder="口座名義カナ(例:ミサキ ハナコ)">
+    </div>
+    <div class="hint">口座名義は通帳・アプリに表示される<b>カタカナ表記そのまま</b>を書きます。1文字違うと振込エラーになることがあります。</div>
+  </div>
+</section>
+
+<!-- ================= STEP 2 ================= -->
+<section class="step" id="step2">
+  <div class="step-head"><div class="num">二</div><h2>宛先(請求先)</h2></div>
+  <p class="step-desc">「誰に支払ってほしいか」を書きます。</p>
+
+  <div class="field">
+    <label>かんたん入力</label>
+    <div class="pills" style="gap:8px">
+      <button type="button" class="preset-btn" id="presetWeeklyBtn">ミサキカク毎週公演</button>
+      <button type="button" class="preset-btn" id="presetOtherBtn">ミサキカク その他の公演</button>
+      <button type="button" class="preset-btn ghost" id="clearToBtn">↺ クリア(他団体宛に作る)</button>
+    </div>
+    <div class="hint">ミサキカク宛は宛名・品目例・税の設定(総額=税込・内税)まで自動で入ります。後から書き換えOKです。</div>
+  </div>
+
+  <div class="field">
+    <label>宛名<span class="req">必須</span></label>
+    <input type="text" id="toName" placeholder="例:ミサキカク 御中">
+  </div>
+
+  <details class="guide">
+    <summary>「御中」と「様」の使い分け</summary>
+    <p><b>会社・団体宛て → 御中</b>(例:株式会社◯◯ 御中)</p>
+    <p><b>個人・担当者宛て → 様</b>(例:株式会社◯◯ 平野様)</p>
+    <p>迷ったら団体名+御中で問題ありません。両方つける(御中様)のはNGです。</p>
+  </details>
+
+  <div class="field">
+    <label>宛先住所<span class="opt">任意</span></label>
+    <textarea id="toAddr" rows="2" placeholder="相手の住所が分かる場合に記入(不明なら空欄でOK)"></textarea>
+  </div>
+</section>
+
+<!-- ================= STEP 3 ================= -->
+<section class="step" id="step3">
+  <div class="step-head"><div class="num">三</div><h2>請求内容と金額</h2></div>
+  <p class="step-desc">「何の代金をいくら請求するか」。このツールがぜんぶ計算します。</p>
+
+  <div class="field">
+    <label>出演日<span class="opt">推奨</span></label>
+    <input type="date" id="perfDate">
+    <div class="hint">支払期限の自動計算に使います(空欄でも作成できます)。複数日にわたる出演の場合は<b>最終日</b>を入力してください。</div>
+  </div>
+
+  <div class="grid2">
+    <div class="field">
+      <label>発行日<span class="req">必須</span></label>
+      <input type="date" id="issueDate">
+      <div class="hint">請求書を作った日でOKです。</div>
+    </div>
+    <div class="field">
+      <label>お支払期限<span class="opt">推奨</span></label>
+      <input type="date" id="dueDate">
+      <div class="hint">出演日・発行日から自動計算されます。手入力で上書きもできます。</div>
+    </div>
+  </div>
+
+  <details class="guide">
+    <summary>支払期限、どうやって決まるの?</summary>
+    <p><b>ミサキカクの基本ルールは「出演月の翌月末払い」</b>です。請求書を出すタイミングによって、少しだけ扱いが変わります。</p>
+    <p><b>①請求書の発行日が、出演日の翌月25日までの場合</b> → 支払期限は<b>出演日の翌月末</b></p>
+    <p><b>②発行日が、出演日の翌月25日を過ぎた場合</b> → 支払期限は<b>発行日の翌月末</b>(1か月後ろ倒し)</p>
+    <p>月末が土日や祝日にあたるときは、<b>その翌平日</b>にずれます。出演日を入力すると自動で計算されるので、基本は自動入力のままでOKです。</p>
+    <p>※他団体宛の請求書については、このルールではなくその団体との取り決めに従ってください。</p>
+  </details>
+
+  <div class="grid2">
+    <div class="field">
+      <label>請求書番号<span class="opt">任意</span></label>
+      <input type="text" id="invNo" placeholder="例:20260717-01">
+      <div class="hint">自分の管理用の通し番号です。「日付+連番」が簡単でおすすめ。</div>
+    </div>
+    <div class="field">
+      <label>件名<span class="opt">任意</span></label>
+      <input type="text" id="subject" placeholder="例:7月公演 出演料の件">
+    </div>
+  </div>
+
+  <div class="field">
+    <label>品目(請求する内容)<span class="req">必須</span></label>
+    <div id="itemRows"></div>
+    <button type="button" class="add-row" id="addRowBtn">＋ 行を追加する</button>
+    <div class="hint">内容は「出演料(◯月◯日 公演名)」のように、いつ・何の仕事か分かるように書くのがコツです。</div>
+  </div>
+
+  <details class="guide">
+    <summary>立替精算ってなに?どう書くの?</summary>
+    <p>公演のために<b>あなたが自腹で払った実費</b>(小道具代、衣装材料、印刷代など)を、出演料と一緒に返してもらう仕組みです。行を追加して、区分を「立替」にして<b>レシートどおりの税込金額</b>を入力してください。</p>
+    <p><b>税率はレシートに合わせます</b>:ほとんどの買い物は10%、スーパーやコンビニの飲食料品(持ち帰り)は8%です。レシートに「8%」「※」と書いてあれば8%を選びます。</p>
+    <p>立替金はあなたの報酬ではなく<b>実費の返金</b>なので、消費税の上乗せも源泉徴収もかかりません(このツールが自動で除外します)。<b>レシートは必ず保管</b>して、求められたらコピーを渡せるようにしておきましょう。</p>
+  </details>
+
+  <div class="field">
+    <label>消費税の扱い</label>
+    <div class="pills">
+      <label><input type="radio" name="taxMode" value="excl" checked>税抜(上の金額に10%を加える)</label>
+      <label><input type="radio" name="taxMode" value="incl">税込(内税表記・金額に10%を含む)</label>
+      <label><input type="radio" name="taxMode" value="none">記載しない</label>
+    </div>
+  </div>
+
+  <details class="guide">
+    <summary>消費税、私も請求していいの?</summary>
+    <p>はい。<b>免税事業者でも消費税分を含めて請求して構いません</b>(法律上問題ありません)。ただし扱いは主催者との取り決め次第なので、初めての相手には「税込◯円でよいですか?」と一言確認するのが丁寧です。</p>
+    <p><b>ミサキカクとの取引はすべて総額(税込)です。</b>提示された出演料をそのまま入力すれば、請求書には「小計(税込)+うち消費税」の内税表記で自動的に載ります(かんたん入力ボタンを押せば設定も自動です)。</p>
+  </details>
+
+  <div class="field">
+    <label class="checkline"><input type="checkbox" id="withholdChk" checked>源泉徴収(10.21%)を差し引いて請求する</label>
+    <div class="hint">報酬(出演料など)の<b>税込額×10.21%</b>で計算します。区分が「立替」「対象外」の品目は源泉の対象になりません。</div>
+  </div>
+
+  <details class="guide">
+    <summary>源泉徴収ってなに?損してない?</summary>
+    <p>あなたの<b>所得税の前払い</b>です。支払側(主催者)が出演料から10.21%を差し引いて、あなたの代わりに国へ納めます。</p>
+    <p>損ではありません。<b>確定申告をすると精算され、払いすぎていれば還付(返金)されます</b>。むしろ「支払調書+確定申告」はフリーランスの基本セットです。</p>
+    <p>※立替金は報酬ではないので源泉の対象外です。※報酬が100万円を超える部分は税率が20.42%になります(このツールは自動で対応します)。</p>
+  </details>
+
+  <div class="field">
+    <label>備考<span class="opt">任意</span></label>
+    <textarea id="notes" rows="2" placeholder="例:お手数ですが、振込手数料のご負担をお願いいたします。"></textarea>
+    <div class="hint">振込手数料をどちらが負担するかは、事前に取り決めがあればそれに従います。</div>
+  </div>
+
+  <div class="calc" id="calcBox"></div>
+</section>
+
+<!-- ================= STEP 4 ================= -->
+<section class="step" id="step4">
+  <div class="step-head"><div class="num">四</div><h2>確認して出力する</h2></div>
+  <p class="step-desc">できあがりを確認して、保存・印刷しましょう。</p>
+
+  <div class="warnbox" id="warnBox"></div>
+
+  <div class="preview-wrap">
+    <div class="sheet-scaler" id="sheetScaler">
+      <div id="printArea">
+        <div id="invoiceSheet"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button type="button" class="btn primary" id="pngBtn">🖼 画像で保存(PNG)</button>
+    <button type="button" class="btn secondary" id="printBtn">🖨 印刷 / PDF保存</button>
+  </div>
+  <p class="save-note">PDFにしたいときは「印刷 / PDF保存」→ 送信先(プリンター)で「PDFに保存」を選びます。<br>メールで送るなら PNG か PDF を添付すればOKです。</p>
+
+  <details class="guide" style="margin-top:14px;background:#EEF2F7">
+    <summary style="color:var(--ink)">提出方法(送り方のルール)</summary>
+    <p style="color:var(--ink-soft)"><b style="color:var(--ink)">ミサキカク宛の場合:</b>メールにPDFを添付してご提出ください。</p>
+    <p style="color:var(--ink-soft);margin-left:4px">
+      宛先:<b style="color:var(--ink)">misakikaku33@gmail.com</b><br>
+      件名:<b style="color:var(--ink)">[お名前]、請求書</b><br>
+      本文:<b style="color:var(--ink)">出演日、公演名</b>
+    </p>
+    <p style="color:var(--ink-soft)">件名にお名前を載せるのは誰からの送信かが間違いなくわかるため、「請求書」の文字を入れるのはメールの振り分けが行われ漏れなく確認しやすくなるためです。ご協力をお願いします。</p>
+    <p style="color:var(--ink-soft)"><b style="color:var(--ink)">他団体宛の場合:</b>このルールではなく、その団体から指示された提出方法に従ってください。</p>
+  </details>
+
+  <details class="guide" style="margin-top:14px">
+    <summary>送ったあとにやること(大事!)</summary>
+    <p><b>①控えを保管する</b>:出した請求書は自分用にも保存しておきます(スマホのフォルダでOK)。確定申告のときに使います。</p>
+    <p><b>②入金を確認する</b>:支払期限を過ぎても入金がなければ、遠慮せず確認の連絡をしましょう。請求書があるので堂々と聞けます。</p>
+  </details>
+</section>
+
+<footer class="foot">
+  入力内容はこのページ内だけで処理され、どこにも送信されません。<br>
+  ページを閉じると入力内容は消えるので、作ったら必ず保存してください。
+</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- helpers ---------- */
+const $ = id => document.getElementById(id);
+const yen = n => "¥" + Math.round(n).toLocaleString("ja-JP");
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- state ---------- */
+const CLS = {
+  r10:{label:"出演料・報酬(10%)", sheet:"10%"},
+  t10:{label:"立替(10%)", sheet:"立替 10%"},
+  t8:{label:"立替(8%)", sheet:"立替 8%"},
+  t0:{label:"対象外(0%)", sheet:"対象外"}
+};
+let items = [
+  {desc:"", qty:1, price:"", cls:"r10"}
+];
+
+/* ---------- init dates & invoice no ---------- */
+const today = new Date();
+const pad = n => String(n).padStart(2,"0");
+const ymd = d => `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+const parseYmd = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+$("issueDate").value = ymd(today);
+$("invNo").placeholder = `例:${today.getFullYear()}${pad(today.getMonth()+1)}${pad(today.getDate())}-01`;
+
+/* ---------- Japanese national holidays (fixed + happy-monday + equinox + furikae) ---------- */
+function nthMonday(year, month, nth){
+  const d = new Date(year, month, 1);
+  let count = 0;
+  while(d.getMonth()===month){
+    if(d.getDay()===1){ count++; if(count===nth) return new Date(d); }
+    d.setDate(d.getDate()+1);
+  }
+  return null;
+}
+function vernalEquinoxDay(year){ return Math.floor(20.8431 + 0.242194*(year-1980) - Math.floor((year-1980)/4)); }
+function autumnalEquinoxDay(year){ return Math.floor(23.2488 + 0.242194*(year-1980) - Math.floor((year-1980)/4)); }
+const holidayCache = {};
+function holidaySetForYear(year){
+  if(holidayCache[year]) return holidayCache[year];
+  const set = new Set();
+  const add = d => { if(d) set.add(d.toDateString()); };
+  [[0,1],[1,11],[1,23],[3,29],[4,3],[4,4],[4,5],[7,11],[10,3],[10,23]]
+    .forEach(([m,d]) => add(new Date(year,m,d)));
+  add(nthMonday(year,0,2));   // 成人の日
+  add(nthMonday(year,6,3));   // 海の日
+  add(nthMonday(year,8,3));   // 敬老の日
+  add(nthMonday(year,9,2));   // スポーツの日
+  add(new Date(year,2,vernalEquinoxDay(year)));   // 春分の日
+  add(new Date(year,8,autumnalEquinoxDay(year))); // 秋分の日
+  // 振替休日:祝日が日曜のとき、その後の最初の非祝日を休日に
+  Array.from(set).forEach(ds => {
+    const d = new Date(ds);
+    if(d.getDay()===0){
+      let nd = new Date(d);
+      do{ nd.setDate(nd.getDate()+1); } while(set.has(nd.toDateString()));
+      set.add(nd.toDateString());
+    }
+  });
+  holidayCache[year] = set;
+  return set;
+}
+function isJPHoliday(date){ return holidaySetForYear(date.getFullYear()).has(date.toDateString()); }
+function isWeekend(date){ const d = date.getDay(); return d===0 || d===6; }
+function nextBusinessDay(date){
+  const d = new Date(date);
+  while(isWeekend(d) || isJPHoliday(d)) d.setDate(d.getDate()+1);
+  return d;
+}
+function addMonths(date, n){ const d = new Date(date); d.setMonth(d.getMonth()+n); return d; }
+function lastDayOfMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0); }
+
+/* ---------- due date auto-calc ----------
+   ①発行日が「出演日の翌月25日」までなら → 出演日の翌月末
+   ②それを過ぎたら → 発行日の翌月末
+   月末が土日祝なら翌平日にずらす。出演日が未入力なら発行日基準で翌月末。 */
+function computeDueDate(){
+  const issueStr = $("issueDate").value;
+  if(!issueStr) return "";
+  const issue = parseYmd(issueStr);
+  const perfStr = $("perfDate").value;
+  let dueMonthAnchor;
+  if(perfStr){
+    const perf = parseYmd(perfStr);
+    const monthAfterPerf = addMonths(perf, 1);
+    const cutoff = new Date(monthAfterPerf.getFullYear(), monthAfterPerf.getMonth(), 25);
+    dueMonthAnchor = (issue.getTime() <= cutoff.getTime()) ? monthAfterPerf : addMonths(issue, 1);
+  } else {
+    dueMonthAnchor = addMonths(issue, 1);
+  }
+  const due = nextBusinessDay(lastDayOfMonth(dueMonthAnchor));
+  return ymd(due);
+}
+function autoFillDueDate(){ $("dueDate").value = computeDueDate(); }
+$("issueDate").addEventListener("change", () => { autoFillDueDate(); updateAll(false); });
+$("perfDate").addEventListener("change", () => { autoFillDueDate(); updateAll(false); });
+autoFillDueDate();
+
+/* ---------- item rows ---------- */
+function renderItems(){
+  const box = $("itemRows");
+  box.innerHTML = "";
+  items.forEach((it, i) => {
+    const card = document.createElement("div");
+    card.className = "item-card";
+    const opts = Object.keys(CLS).map(k =>
+      `<option value="${k}" ${it.cls===k?"selected":""}>${CLS[k].label}</option>`).join("");
+    card.innerHTML = `
+      <div class="ic-top">
+        <input type="text" data-i="${i}" data-k="desc" value="${esc(it.desc)}" placeholder="出演料(◯月◯日 公演名) / 立替:小道具代 など">
+        ${items.length>1 ? `<button type="button" class="del" data-del="${i}" aria-label="行を削除">×</button>` : ""}
+      </div>
+      <div class="ic-bottom">
+        <div class="ic-f"><label>区分</label>
+          <select data-i="${i}" data-k="cls">${opts}</select></div>
+        <div class="ic-f"><label>数量</label>
+          <input type="number" data-i="${i}" data-k="qty" value="${esc(it.qty)}" min="0" inputmode="numeric"></div>
+        <div class="ic-f"><label>単価(円)</label>
+          <input type="number" data-i="${i}" data-k="price" value="${esc(it.price)}" min="0" inputmode="numeric" placeholder="10000"></div>
+        <div class="ic-amt"><label>金額</label>
+          <span class="v">${it.qty && it.price ? yen(it.qty*it.price) : "－"}</span></div>
+      </div>`;
+    box.appendChild(card);
+  });
+}
+function onItemEdit(e){
+  const i = e.target.dataset.i, k = e.target.dataset.k;
+  if(i===undefined) return;
+  if(k==="desc" || k==="cls") items[i][k] = e.target.value;
+  else items[i][k] = e.target.value===""?"":Number(e.target.value);
+  // update amount display of this card only
+  const card = e.target.closest(".item-card");
+  const it = items[i];
+  card.querySelector(".ic-amt .v").textContent = it.qty && it.price ? yen(it.qty*it.price) : "－";
+  updateAll(false);
+}
+$("itemRows").addEventListener("input", onItemEdit);
+$("itemRows").addEventListener("change", onItemEdit);
+$("itemRows").addEventListener("click", e => {
+  const d = e.target.dataset.del;
+  if(d!==undefined){ items.splice(Number(d),1); renderItems(); updateAll(true); }
+});
+$("addRowBtn").addEventListener("click", () => {
+  items.push({desc:"", qty:1, price:"", cls:"r10"});
+  renderItems(); updateAll(true);
+});
+
+/* ---------- Misakikaku presets ---------- */
+const MISAKIKAKU_ADDR = "神奈川県相模原市中央区星が丘3-12-8";
+const setTaxMode = v => { document.querySelector(`input[name="taxMode"][value="${v}"]`).checked = true; };
+const markActive = id => {
+  ["presetWeeklyBtn","presetOtherBtn"].forEach(b => $(b).classList.toggle("active", b===id));
+};
+function perfDateJp(){
+  const v = $("perfDate").value;
+  if(!v) return null;
+  const d = parseYmd(v);
+  return `${d.getMonth()+1}月${d.getDate()}日`;
+}
+function applyMisakikaku(subjectText, itemText, btnId){
+  $("toName").value = "ミサキカク 御中";
+  $("toAddr").value = MISAKIKAKU_ADDR;
+  $("subject").value = subjectText;
+  const dj = perfDateJp();
+  items[0].desc = dj ? itemText.replace("◯月◯日", dj) : itemText;
+  setTaxMode("incl"); // ミサキカクは総額(税込)取引
+  markActive(btnId);
+  renderItems(); updateAll(true);
+}
+$("presetWeeklyBtn").addEventListener("click", () => {
+  applyMisakikaku("「ミサキカク毎週公演」出演料の件", "出演料(◯月◯日「ミサキカク毎週公演」)", "presetWeeklyBtn");
+});
+$("presetOtherBtn").addEventListener("click", () => {
+  applyMisakikaku("「◯◯」出演料の件", "出演料(◯月◯日「◯◯」)", "presetOtherBtn");
+});
+$("clearToBtn").addEventListener("click", () => {
+  $("toName").value = "";
+  $("toAddr").value = "";
+  $("subject").value = "";
+  items = [{desc:"", qty:1, price:"", cls:"r10"}];
+  setTaxMode("excl");
+  markActive(null);
+  renderItems(); updateAll(true);
+});
+/* 出演日をあとから入力/変更したとき、未入力プレースホルダー「◯月◯日」が
+   残っている品目があれば実際の日付に転記する(手入力済みの内容は上書きしない) */
+$("perfDate").addEventListener("change", () => {
+  const dj = perfDateJp();
+  if(!dj) return;
+  let changed = false;
+  items.forEach(it => {
+    if(it.desc && it.desc.includes("◯月◯日")){
+      it.desc = it.desc.replace("◯月◯日", dj);
+      changed = true;
+    }
+  });
+  if(changed){ renderItems(); updateAll(false); }
+});
+
+/* ---------- calculations ---------- */
+function calc(){
+  const taxMode = document.querySelector('input[name="taxMode"]:checked').value;
+  const withhold = $("withholdChk").checked;
+
+  // 区分ごとの合計
+  let rewardRaw = 0, tate10 = 0, tate8 = 0, t0 = 0;
+  items.forEach(it => {
+    const a = (Number(it.qty)||0) * (Number(it.price)||0);
+    if(it.cls==="t10") tate10 += a;
+    else if(it.cls==="t8") tate8 += a;
+    else if(it.cls==="t0") t0 += a;
+    else rewardRaw += a;
+  });
+
+  // 報酬部分:消費税モードに従う
+  let rewEx, rewTax, rewIn;
+  if(taxMode==="excl"){ rewEx = rewardRaw; rewTax = Math.floor(rewEx*0.10); rewIn = rewEx+rewTax; }
+  else if(taxMode==="incl"){ rewIn = rewardRaw; rewTax = Math.floor(rewIn*10/110 + 1e-9); rewEx = rewIn - rewTax; }
+  else { rewEx = rewardRaw; rewTax = 0; rewIn = rewardRaw; }
+
+  // 立替:実費税込のまま(内税額は参考表示用)
+  const tateTax10 = Math.floor(tate10*10/110 + 1e-9);
+  const tateTax8  = Math.floor(tate8*8/108 + 1e-9);
+  const tate = tate10 + tate8 + t0;
+
+  const total = rewIn + tate; // 源泉差引前の請求総額
+
+  // 源泉徴収:報酬の税込額×10.21%(100万円超は超過分20.42%)。立替・対象外は除外。
+  let wh = 0;
+  if(withhold){
+    const base = rewIn;
+    wh = base <= 1000000
+      ? Math.floor(base*0.1021)
+      : Math.floor((base-1000000)*0.2042) + 102100;
+  }
+  const due = total - wh;
+  const raw = rewardRaw + tate;
+  return {taxMode, raw, rewardRaw, rewEx, rewTax, rewIn, tate10, tate8, t0, tate, tateTax10, tateTax8, total, wh, due, withhold};
+}
+
+function renderCalc(c){
+  let html = "";
+  if(c.taxMode==="incl"){
+    html += `<div class="row"><span>小計(税込)</span><span class="num">${yen(c.total)}</span></div>`;
+    if(c.rewTax + c.tateTax10 > 0)
+      html += `<div class="row" style="color:var(--muted)"><span>(うち消費税10%)</span><span class="num">${yen(c.rewTax + c.tateTax10)}</span></div>`;
+    if(c.tateTax8 > 0)
+      html += `<div class="row" style="color:var(--muted)"><span>(うち消費税8%)</span><span class="num">${yen(c.tateTax8)}</span></div>`;
+  } else if(c.taxMode==="excl"){
+    html += `<div class="row"><span>小計${c.tate>0?"":"(税抜)"}</span><span class="num">${yen(c.rewEx + c.tate)}</span></div>`;
+    html += `<div class="row"><span>消費税(10%)</span><span class="num">${yen(c.rewTax)}</span></div>`;
+    if(c.tate>0)
+      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※立替分(${yen(c.tate10+c.tate8+c.t0)})は実費のため消費税を加算していません</span><span></span></div>`;
+  } else {
+    html += `<div class="row"><span>小計</span><span class="num">${yen(c.total)}</span></div>`;
+  }
+  if(c.tate>0)
+    html += `<div class="row" style="color:var(--muted)"><span>(うち立替金 ※源泉対象外)</span><span class="num">${yen(c.tate)}</span></div>`;
+  if(c.withhold)
+    html += `<div class="row minus"><span>源泉徴収税額(${c.rewIn>1000000?"10.21%/20.42%":"10.21%"})</span><span class="num">△ ${yen(c.wh)}</span></div>`;
+  html += `<div class="row total"><span>差引 ご請求金額</span><span class="num">${yen(c.due)}</span></div>`;
+  $("calcBox").innerHTML = html;
+}
+
+/* ---------- invoice sheet ---------- */
+const fmtDate = v => {
+  if(!v) return "";
+  const [y,m,d] = v.split("-");
+  return `${y}年${Number(m)}月${Number(d)}日`;
+};
+
+function renderSheet(c){
+  const fromLines = [];
+  if($("fromAddr").value) fromLines.push(esc($("fromAddr").value));
+  if($("fromTel").value) fromLines.push("TEL:" + esc($("fromTel").value));
+  if($("fromMail").value) fromLines.push(esc($("fromMail").value));
+  if($("fromInvoiceNo").value) fromLines.push("登録番号:" + esc($("fromInvoiceNo").value));
+
+  const itemRowsHtml = items
+    .filter(it => it.desc || it.price)
+    .map(it => `<tr>
+      <td>${esc(it.desc)||"　"}</td>
+      <td class="c">${CLS[it.cls] ? CLS[it.cls].sheet : "10%"}</td>
+      <td class="c">${it.qty!==""?esc(it.qty):""}</td>
+      <td class="r">${it.price!==""?Number(it.price).toLocaleString("ja-JP"):""}</td>
+      <td class="r">${it.qty!==""&&it.price!==""?(it.qty*it.price).toLocaleString("ja-JP"):""}</td>
+    </tr>`).join("");
+
+  const emptyRows = Math.max(0, 4 - items.filter(it=>it.desc||it.price).length);
+  const emptyHtml = Array(emptyRows).fill('<tr><td>　</td><td></td><td></td><td></td><td></td></tr>').join("");
+
+  let totals = "";
+  if(c.taxMode==="incl"){
+    totals += `<tr><td class="lbl">小計(税込)</td><td class="val">${yen(c.total)}</td></tr>`;
+    if(c.rewTax + c.tateTax10 > 0)
+      totals += `<tr><td class="lbl">(うち消費税10%)</td><td class="val">${yen(c.rewTax + c.tateTax10)}</td></tr>`;
+    if(c.tateTax8 > 0)
+      totals += `<tr><td class="lbl">(うち消費税8%)</td><td class="val">${yen(c.tateTax8)}</td></tr>`;
+  } else if(c.taxMode==="excl"){
+    totals += `<tr><td class="lbl">小計${c.tate>0?"":"(税抜)"}</td><td class="val">${yen(c.rewEx + c.tate)}</td></tr>`;
+    totals += `<tr><td class="lbl">消費税(10%)</td><td class="val">${yen(c.rewTax)}</td></tr>`;
+  } else {
+    totals += `<tr><td class="lbl">小計</td><td class="val">${yen(c.total)}</td></tr>`;
+  }
+  if(c.tate>0)
+    totals += `<tr><td class="lbl">(うち立替金)</td><td class="val">${yen(c.tate)}</td></tr>`;
+  if(c.withhold) totals += `<tr><td class="lbl">源泉徴収税額</td><td class="val">△ ${yen(c.wh)}</td></tr>`;
+  totals += `<tr class="grand"><td class="lbl">差引ご請求金額</td><td class="val">${yen(c.due)}</td></tr>`;
+
+  const bankParts = [];
+  if($("bankName").value || $("bankBranch").value) bankParts.push([esc($("bankName").value), esc($("bankBranch").value)].filter(Boolean).join("　"));
+  if($("bankType").value) bankParts.push(esc($("bankType").value));
+  if($("bankHolder").value) bankParts.push("口座名義:" + esc($("bankHolder").value));
+
+  $("invoiceSheet").innerHTML = `
+    <div class="inv-meta">
+      発行日:${fmtDate($("issueDate").value)||"　"}<br>
+      ${$("invNo").value ? "請求書番号:" + esc($("invNo").value) + "<br>" : ""}
+      ${$("dueDate").value ? "お支払期限:" + fmtDate($("dueDate").value) : ""}
+    </div>
+    <div class="inv-title">請　求　書</div>
+    <div class="inv-cols">
+      <div class="inv-to">
+        <div class="to-name">${esc($("toName").value)||"（宛名を入力してください）"}</div>
+        <div class="to-addr">${esc($("toAddr").value)}</div>
+      </div>
+      <div class="inv-from">
+        <div class="from-name">${esc($("fromName").value)||"（お名前を入力してください）"}</div>
+        ${fromLines.join("<br>")}
+      </div>
+    </div>
+    ${$("subject").value ? `<div class="inv-subject">件名:${esc($("subject").value)}</div>` : ""}
+    <div class="inv-greeting">下記のとおりご請求申し上げます。</div>
+    <div class="inv-amountbox">
+      <span class="lbl">ご請求金額</span>
+      <span class="val">${yen(c.due)}${c.taxMode!=="none" ? '<span style="font-size:14px">（税込）</span>' : ""}</span>
+    </div>
+    <table class="inv-items">
+      <thead><tr><th style="width:42%">内容</th><th style="width:13%">区分</th><th style="width:10%">数量</th><th style="width:17%">単価(円)</th><th style="width:18%">金額(円)</th></tr></thead>
+      <tbody>${itemRowsHtml}${emptyHtml}</tbody>
+    </table>
+    <table class="inv-totals"><tbody>${totals}</tbody></table>
+    ${bankParts.length ? `<div class="inv-bank"><div class="bank-title">お振込先</div>${bankParts.join("<br>")}</div>` : ""}
+    ${$("notes").value ? `<div class="inv-notes"><div class="notes-title">備考</div>${esc($("notes").value)}</div>` : ""}
+  `;
+}
+
+/* ---------- progress rail ---------- */
+function updateRail(c){
+  const s1 = $("fromName").value && $("bankName").value && $("bankType").value && $("bankHolder").value;
+  const s2 = !!$("toName").value;
+  const s3 = c.raw > 0 && items.some(it=>it.desc);
+  const s4 = s1 && s2 && s3;
+  [[1,s1],[2,s2],[3,s3],[4,s4]].forEach(([n,ok])=>{
+    document.querySelector(`.stamp[data-step="${n}"]`).classList.toggle("done", !!ok);
+  });
+  // warn box
+  const missing = [];
+  if(!s1) missing.push("①お名前と振込先");
+  if(!s2) missing.push("②宛名");
+  if(!s3) missing.push("③品目と金額");
+  const wb = $("warnBox");
+  if(missing.length){
+    wb.textContent = "あと少し! " + missing.join("、") + " が未入力です。埋めると完成です。";
+    wb.classList.add("show");
+  } else wb.classList.remove("show");
+}
+
+/* ---------- preview scaling ---------- */
+function scaleSheet(){
+  const wrap = document.querySelector(".preview-wrap");
+  const scaler = $("sheetScaler");
+  const w = wrap.clientWidth - 32;
+  const scale = Math.min(1, w / 794);
+  scaler.style.transform = `scale(${scale})`;
+  scaler.style.width = "794px";
+  scaler.style.height = (($("invoiceSheet").offsetHeight) * scale) + "px";
+}
+window.addEventListener("resize", () => { scaleSheet(); });
+
+/* ---------- master update ---------- */
+function updateAll(rerenderRows){
+  const c = calc();
+  renderCalc(c);
+  renderSheet(c);
+  updateRail(c);
+  scaleSheet();
+}
+document.querySelectorAll("input,textarea,select").forEach(el=>{
+  el.addEventListener("input", ()=>updateAll(false));
+});
+document.querySelectorAll('input[name="taxMode"], #withholdChk').forEach(el=>{
+  el.addEventListener("change", ()=>updateAll(false));
+});
+
+/* ---------- output ---------- */
+$("pngBtn").addEventListener("click", async () => {
+  const btn = $("pngBtn");
+  btn.disabled = true; btn.textContent = "作成中…";
+  try{
+    const canvas = await html2canvas($("invoiceSheet"), {scale:2, backgroundColor:"#ffffff", useCORS:true});
+    const a = document.createElement("a");
+    const inv = $("invNo").value || ymd(new Date()).replace(/-/g,"");
+    a.download = `請求書_${inv}.png`;
+    a.href = canvas.toDataURL("image/png");
+    a.click();
+  }catch(e){
+    alert("画像の作成に失敗しました。もう一度お試しください。");
+  }finally{
+    btn.disabled = false; btn.textContent = "🖼 画像で保存(PNG)";
+  }
+});
+$("printBtn").addEventListener("click", () => window.print());
+
+/* ---------- boot ---------- */
+renderItems();
+updateAll(true);
+setTimeout(scaleSheet, 300); // after fonts settle
+})();
+</script>
+</body>
+</html>

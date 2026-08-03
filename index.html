@@ -1009,14 +1009,21 @@ document.querySelectorAll('input[name="taxMode"], #withholdChk').forEach(el=>{
 });
 
 /* ---------- output ---------- */
+function buildFileBaseName(){
+  const c = calc();
+  const dateStr = ($("issueDate").value || ymd(new Date())).replace(/-/g,"");
+  const name = ($("fromName").value || "名前未入力").replace(/[\\/:*?"<>|]/g,"").trim() || "名前未入力";
+  const amount = Math.round(c.rewIn);
+  return `${dateStr}_${name}_${amount}`;
+}
+
 $("pngBtn").addEventListener("click", async () => {
   const btn = $("pngBtn");
   btn.disabled = true; btn.textContent = "作成中…";
   try{
     const canvas = await html2canvas($("invoiceSheet"), {scale:2, backgroundColor:"#ffffff", useCORS:true});
     const a = document.createElement("a");
-    const inv = $("invNo").value || ymd(new Date()).replace(/-/g,"");
-    a.download = `請求書_${inv}.png`;
+    a.download = `${buildFileBaseName()}.png`;
     a.href = canvas.toDataURL("image/png");
     a.click();
   }catch(e){
@@ -1025,7 +1032,13 @@ $("pngBtn").addEventListener("click", async () => {
     btn.disabled = false; btn.textContent = "🖼 画像で保存(PNG)";
   }
 });
-$("printBtn").addEventListener("click", () => window.print());
+
+const originalTitle = document.title;
+$("printBtn").addEventListener("click", () => {
+  document.title = buildFileBaseName();
+  window.print();
+});
+window.addEventListener("afterprint", () => { document.title = originalTitle; });
 
 /* ---------- boot ---------- */
 renderItems();

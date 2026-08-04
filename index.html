@@ -380,7 +380,7 @@ footer.foot{
 <!-- ================= STEP 1 ================= -->
 <section class="step" id="step1">
   <div class="step-head"><div class="num">一</div><h2>あなたの情報(差出人)</h2></div>
-  <p class="step-desc">「誰からの請求か」を伝える部分です。</p>
+  <p class="step-desc">「誰からの請求か」を伝える部分です。この欄の内容は、この端末のこのブラウザに自動で保存され、次回開いたときも残ります。<button type="button" id="clearSavedBtn" style="border:none;background:none;color:var(--shu);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit">保存内容を削除</button></p>
 
   <div class="field">
     <label>お名前<span class="req">必須</span></label>
@@ -605,8 +605,8 @@ footer.foot{
 </section>
 
 <footer class="foot">
-  入力内容はこのページ内だけで処理され、どこにも送信されません。<br>
-  ページを閉じると入力内容は消えるので、作ったら必ず保存してください。
+  入力内容はこの端末の中だけで処理され、どこにも送信されません。<br>
+  「あなたの情報」はこのブラウザに自動保存されますが、それ以外(宛先・品目・金額など)はページを閉じると消えるので、作ったら必ず保存してください。
 </footer>
 </div>
 
@@ -1040,7 +1040,39 @@ $("printBtn").addEventListener("click", () => {
 });
 window.addEventListener("afterprint", () => { document.title = originalTitle; });
 
+/* ---------- 発行者情報の端末保存(localStorage) ----------
+   お名前・住所・連絡先・振込先など、公演ごとに変わらない情報だけを
+   この端末のブラウザに保存します。サーバーには一切送信されません。 */
+const ISSUER_FIELDS = ["fromName","fromAddr","fromTel","fromMail","fromInvoiceNo","bankName","bankBranch","bankType","bankHolder"];
+const ISSUER_STORAGE_KEY = "invoiceTool_issuerInfo_v1";
+
+function saveIssuerInfo(){
+  try{
+    const data = {};
+    ISSUER_FIELDS.forEach(id => { data[id] = $(id).value; });
+    localStorage.setItem(ISSUER_STORAGE_KEY, JSON.stringify(data));
+  }catch(e){ /* プライベートブラウジング等で保存できない場合は何もしない */ }
+}
+function loadIssuerInfo(){
+  try{
+    const raw = localStorage.getItem(ISSUER_STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    ISSUER_FIELDS.forEach(id => { if(data[id]) $(id).value = data[id]; });
+  }catch(e){ /* 読み込めない場合は無視して空欄のまま */ }
+}
+ISSUER_FIELDS.forEach(id => {
+  $(id).addEventListener("input", saveIssuerInfo);
+});
+$("clearSavedBtn").addEventListener("click", () => {
+  if(!confirm("この端末に保存されている「あなたの情報」を削除します。よろしいですか?")) return;
+  try{ localStorage.removeItem(ISSUER_STORAGE_KEY); }catch(e){}
+  ISSUER_FIELDS.forEach(id => { $(id).value = ""; });
+  updateAll(true);
+});
+
 /* ---------- boot ---------- */
+loadIssuerInfo();
 renderItems();
 updateAll(true);
 setTimeout(scaleSheet, 300); // after fonts settle

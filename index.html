@@ -261,6 +261,25 @@ details.guide p b{color:var(--shu)}
 }
 .warnbox.show{display:block}
 
+/* final check (strong reminder) */
+.finalcheck{
+  background:#fff;border:2px solid var(--shu);border-radius:12px;
+  padding:16px 18px;margin-bottom:16px;
+}
+.finalcheck .fc-title{
+  font-weight:700;color:var(--shu);font-size:15px;
+  display:flex;align-items:center;gap:6px;margin-bottom:8px;
+}
+.finalcheck ul{list-style:none;margin:0;padding:0}
+.finalcheck li{
+  display:flex;gap:8px;align-items:flex-start;
+  font-size:13.5px;color:var(--sumi);padding:4px 0;
+}
+.finalcheck li::before{
+  content:"☐";color:var(--shu);font-size:15px;line-height:1.4;flex-shrink:0;
+}
+.finalcheck li b{color:var(--ink)}
+
 footer.foot{
   text-align:center;font-size:11.5px;color:var(--muted);
   margin-top:30px;line-height:1.9;
@@ -571,6 +590,16 @@ footer.foot{
 <section class="step" id="step4">
   <div class="step-head"><div class="num">四</div><h2>確認して出力する</h2></div>
   <p class="step-desc">できあがりを確認して、保存・印刷しましょう。</p>
+
+  <div class="finalcheck">
+    <div class="fc-title">🔍 保存・印刷する前に、もう一度チェック!</div>
+    <ul>
+      <li><b>発行日</b>は今日の日付になっていますか?(出演日と同じ日付になっていないか特に注意)</li>
+      <li><b>出演日・支払期限</b>は合っていますか?</li>
+      <li><b>宛先の名前・金額・品目</b>に間違いはありませんか?</li>
+      <li><b>振込先(口座名義など)</b>に誤りはありませんか?</li>
+    </ul>
+  </div>
 
   <div class="warnbox" id="warnBox"></div>
 

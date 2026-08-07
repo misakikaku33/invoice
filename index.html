@@ -353,11 +353,12 @@ footer.foot{
   font-size:12px;text-align:right;line-height:1.8;
 }
 #invoiceSheet .inv-cols{display:flex;justify-content:space-between;gap:30px;margin-bottom:24px;align-items:flex-start}
-#invoiceSheet .inv-to{flex:1;min-width:0}
+#invoiceSheet .inv-to{width:340px;flex-shrink:0}
 #invoiceSheet .inv-to .to-name{
   font-size:19px;font-weight:700;
   border-bottom:1.5px solid #1a1a1a;
   padding-bottom:5px;margin-bottom:8px;
+  word-break:break-word;
 }
 #invoiceSheet .inv-to .to-addr{font-size:12px;color:#333;white-space:pre-line}
 #invoiceSheet .inv-from{width:275px;font-size:12px;line-height:1.8;margin-top:34px}
@@ -546,7 +547,7 @@ footer.foot{
     <div class="hint">支払期限の自動計算に使います(空欄でも作成できます)。複数日にわたる出演の場合は<b>最終日</b>を入力してください。</div>
   </div>
 
-  <div class="grid2">
+  <div class="grid2" style="column-gap:28px">
     <div class="field">
       <label>発行日<span class="req">必須</span></label>
       <div style="display:flex;gap:6px">
@@ -643,8 +644,8 @@ footer.foot{
     <ul>
       <li><div class="fc-h">発行日</div><div class="fc-d">今日の日付になっていますか?(出演日と同じ日付になっていないか特に注意)</div></li>
       <li><div class="fc-h">出演日・支払期限</div><div class="fc-d">それぞれ合っていますか?</div></li>
-      <li><div class="fc-h">宛先の名前・金額・品目</div><div class="fc-d">間違いはありませんか?</div></li>
-      <li><div class="fc-h">振込先(口座名義など)</div><div class="fc-d">誤りはありませんか?</div></li>
+      <li><div class="fc-h">宛先の名前・金額・品目</div><div class="fc-d">依頼内容や成果物等に間違いはありませんか?</div></li>
+      <li><div class="fc-h">振込先(口座名義など)</div><div class="fc-d">ゆうちょ銀行の場合も支店名+口座番号で記載していますか?</div></li>
     </ul>
   </div>
 

@@ -272,13 +272,18 @@ details.guide p b{color:var(--shu)}
 }
 .finalcheck ul{list-style:none;margin:0;padding:0}
 .finalcheck li{
-  display:flex;gap:8px;align-items:flex-start;
-  font-size:13.5px;color:var(--sumi);padding:4px 0;
+  position:relative;padding:7px 0 7px 26px;
 }
 .finalcheck li::before{
-  content:"☐";color:var(--shu);font-size:15px;line-height:1.4;flex-shrink:0;
+  content:"☐";color:var(--shu);font-size:15px;
+  position:absolute;left:0;top:7px;
 }
-.finalcheck li b{color:var(--ink)}
+.finalcheck li .fc-h{
+  font-weight:700;color:var(--ink);font-size:14px;margin-bottom:2px;
+}
+.finalcheck li .fc-d{
+  font-size:13px;color:var(--ink-soft);line-height:1.55;
+}
 
 /* submission method (step 5) */
 .submitbox{
@@ -636,10 +641,10 @@ footer.foot{
   <div class="finalcheck">
     <div class="fc-title">🔍 保存・印刷する前に、もう一度チェック!</div>
     <ul>
-      <li><b>発行日</b>は今日の日付になっていますか?(出演日と同じ日付になっていないか特に注意)</li>
-      <li><b>出演日・支払期限</b>は合っていますか?</li>
-      <li><b>宛先の名前・金額・品目</b>に間違いはありませんか?</li>
-      <li><b>振込先(口座名義など)</b>に誤りはありませんか?</li>
+      <li><div class="fc-h">発行日</div><div class="fc-d">今日の日付になっていますか?(出演日と同じ日付になっていないか特に注意)</div></li>
+      <li><div class="fc-h">出演日・支払期限</div><div class="fc-d">それぞれ合っていますか?</div></li>
+      <li><div class="fc-h">宛先の名前・金額・品目</div><div class="fc-d">間違いはありませんか?</div></li>
+      <li><div class="fc-h">振込先(口座名義など)</div><div class="fc-d">誤りはありませんか?</div></li>
     </ul>
   </div>
 

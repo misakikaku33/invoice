@@ -476,19 +476,22 @@ footer.foot{
 
   <div class="field">
     <label>出演日<span class="opt">推奨</span></label>
-    <input type="date" id="perfDate">
+    <input type="date" id="perfDate" autocomplete="off">
     <div class="hint">支払期限の自動計算に使います(空欄でも作成できます)。複数日にわたる出演の場合は<b>最終日</b>を入力してください。</div>
   </div>
 
   <div class="grid2">
     <div class="field">
       <label>発行日<span class="req">必須</span></label>
-      <input type="date" id="issueDate">
-      <div class="hint">請求書を作った日でOKです。</div>
+      <div style="display:flex;gap:6px">
+        <input type="date" id="issueDate" autocomplete="off" style="flex:1">
+        <button type="button" id="todayBtn" class="preset-btn ghost" style="padding:9px 12px;font-size:12px;white-space:nowrap">今日</button>
+      </div>
+      <div class="hint">請求書を作った日でOKです。出演日と同じ日付になっていないか、念のため確認してください。</div>
     </div>
     <div class="field">
       <label>お支払期限<span class="opt">推奨</span></label>
-      <input type="date" id="dueDate">
+      <input type="date" id="dueDate" autocomplete="off">
       <div class="hint">出演日・発行日から自動計算されます。手入力で上書きもできます。</div>
     </div>
   </div>
@@ -708,6 +711,10 @@ function computeDueDate(){
 }
 function autoFillDueDate(){ $("dueDate").value = computeDueDate(); }
 $("issueDate").addEventListener("change", () => { autoFillDueDate(); updateAll(false); });
+$("todayBtn").addEventListener("click", () => {
+  $("issueDate").value = ymd(new Date());
+  autoFillDueDate(); updateAll(false);
+});
 $("perfDate").addEventListener("change", () => { autoFillDueDate(); updateAll(false); });
 autoFillDueDate();
 
@@ -1013,7 +1020,7 @@ function buildFileBaseName(){
   const c = calc();
   const dateStr = ($("issueDate").value || ymd(new Date())).replace(/-/g,"");
   const name = ($("fromName").value || "名前未入力").replace(/[\\/:*?"<>|]/g,"").trim() || "名前未入力";
-  const amount = Math.round(c.rewIn);
+  const amount = Math.round(c.due);
   return `${dateStr}_${name}_${amount}`;
 }
 
@@ -1076,6 +1083,9 @@ loadIssuerInfo();
 renderItems();
 updateAll(true);
 setTimeout(scaleSheet, 300); // after fonts settle
+// スマホでページを戻る/進むで復元された(bfcache)ときも、
+// 実際の入力欄の値でプレビューを必ず作り直す
+window.addEventListener("pageshow", (e) => { if(e.persisted) updateAll(true); });
 })();
 </script>
 </body>

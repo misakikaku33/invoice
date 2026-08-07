@@ -280,6 +280,46 @@ details.guide p b{color:var(--shu)}
 }
 .finalcheck li b{color:var(--ink)}
 
+/* submission method (step 5) */
+.submitbox{
+  background:var(--ink);color:#fff;
+  border-radius:var(--radius);
+  padding:22px 20px;
+}
+.submitbox .sb-note{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,255,255,.12);color:#fff;
+  border-radius:10px;padding:12px 16px;margin-bottom:16px;
+  font-weight:600;font-size:15.5px;line-height:1.6;
+}
+.submitbox .sb-note .mark{font-size:18px;flex-shrink:0}
+.submitbox .sb-lead{font-size:14px;margin-bottom:14px;color:#EAF0F6}
+.submitbox .sb-card{
+  background:#fff;color:var(--sumi);
+  border-radius:10px;padding:16px 18px;margin-bottom:14px;
+}
+.submitbox .sb-card .sb-label{
+  font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.05em;
+  margin-bottom:2px;
+}
+.submitbox .sb-card .sb-value{
+  font-size:16px;font-weight:700;color:var(--ink);
+  margin-bottom:12px;word-break:break-all;
+}
+.submitbox .sb-card .sb-value:last-child{margin-bottom:0}
+.submitbox .sb-why{font-size:12.5px;color:#CBD8E6;line-height:1.7}
+.submitbox .sb-other{
+  margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.2);
+  font-size:13px;color:#CBD8E6;
+}
+.submitbox .sb-other b{color:#fff}
+/* neutral variant: recipient not yet identified as Misakikaku */
+.submitbox.neutral{
+  background:var(--paper);color:var(--sumi);border:1.5px solid var(--line);
+}
+.submitbox.neutral .sb-lead{color:var(--ink);font-size:14.5px;font-weight:700;margin-bottom:8px}
+.submitbox.neutral .sb-why{color:var(--muted);font-size:13px}
+
 footer.foot{
   text-align:center;font-size:11.5px;color:var(--muted);
   margin-top:30px;line-height:1.9;
@@ -307,7 +347,7 @@ footer.foot{
   position:absolute;top:56px;right:60px;
   font-size:12px;text-align:right;line-height:1.8;
 }
-#invoiceSheet .inv-cols{display:flex;justify-content:space-between;gap:30px;margin-bottom:24px}
+#invoiceSheet .inv-cols{display:flex;justify-content:space-between;gap:30px;margin-bottom:24px;align-items:flex-start}
 #invoiceSheet .inv-to{flex:1;min-width:0}
 #invoiceSheet .inv-to .to-name{
   font-size:19px;font-weight:700;
@@ -315,7 +355,7 @@ footer.foot{
   padding-bottom:5px;margin-bottom:8px;
 }
 #invoiceSheet .inv-to .to-addr{font-size:12px;color:#333;white-space:pre-line}
-#invoiceSheet .inv-from{width:275px;font-size:12px;line-height:1.8}
+#invoiceSheet .inv-from{width:275px;font-size:12px;line-height:1.8;margin-top:34px}
 #invoiceSheet .inv-from .from-name{font-size:15px;font-weight:700}
 #invoiceSheet .inv-subject{margin-bottom:6px;font-size:13px}
 #invoiceSheet .inv-greeting{font-size:12.5px;margin-bottom:16px}
@@ -388,6 +428,8 @@ footer.foot{
   <div class="stamp" data-step="3"><div class="circle">三</div><span>内容</span></div>
   <div class="dash"></div>
   <div class="stamp" data-step="4"><div class="circle">四</div><span>出力</span></div>
+  <div class="dash"></div>
+  <div class="stamp" data-step="5"><div class="circle">五</div><span>提出</span></div>
 </div>
 
 <details class="guide" style="background:#EEF2F7">
@@ -615,19 +657,15 @@ footer.foot{
     <button type="button" class="btn primary" id="pngBtn">🖼 画像で保存(PNG)</button>
     <button type="button" class="btn secondary" id="printBtn">🖨 印刷 / PDF保存</button>
   </div>
-  <p class="save-note">PDFにしたいときは「印刷 / PDF保存」→ 送信先(プリンター)で「PDFに保存」を選びます。<br>メールで送るなら PNG か PDF を添付すればOKです。</p>
+  <p class="save-note">PDFにしたいときは「印刷 / PDF保存」→ 送信先(プリンター)で「PDFに保存」を選びます。<br>ミサキカクへの提出はPDFのみです。PNGは控えの保管など、それ以外の用途にお使いください。</p>
+</section>
 
-  <details class="guide" style="margin-top:14px;background:#EEF2F7">
-    <summary style="color:var(--ink)">提出方法(送り方のルール)</summary>
-    <p style="color:var(--ink-soft)"><b style="color:var(--ink)">ミサキカク宛の場合:</b>メールにPDFを添付してご提出ください。</p>
-    <p style="color:var(--ink-soft);margin-left:4px">
-      宛先:<b style="color:var(--ink)">misakikaku33@gmail.com</b><br>
-      メールの件名:<b style="color:var(--ink)">[お名前]、請求書</b><br>
-      メールの本文:<b style="color:var(--ink)">出演日、公演名</b>
-    </p>
-    <p style="color:var(--ink-soft)">件名にお名前を載せるのは誰からの送信かが間違いなくわかるため、「請求書」の文字を入れるのはメールの振り分けが行われ漏れなく確認しやすくなるためです。ご協力をお願いします。</p>
-    <p style="color:var(--ink-soft)"><b style="color:var(--ink)">他団体宛の場合:</b>このルールではなく、その団体から指示された提出方法に従ってください。</p>
-  </details>
+<!-- ================= STEP 5 ================= -->
+<section class="step" id="step5">
+  <div class="step-head"><div class="num">五</div><h2>提出する</h2></div>
+  <p class="step-desc">作った請求書を、正しい方法で提出しましょう。</p>
+
+  <div id="submitArea"></div>
 
   <details class="guide" style="margin-top:14px">
     <summary>送ったあとにやること(大事!)</summary>
@@ -1029,12 +1067,40 @@ function scaleSheet(){
 }
 window.addEventListener("resize", () => { scaleSheet(); });
 
+/* ---------- submission method (step 5) ---------- */
+function renderSubmitBox(){
+  const toName = $("toName").value.trim();
+  const isMisakikaku = toName === "ミサキカク 御中";
+  const box = $("submitArea");
+  if(isMisakikaku){
+    box.className = "submitbox";
+    box.innerHTML = `
+      <div class="sb-note"><span class="mark">✉️</span><span>ミサキカク宛はメール提出のみです。メールでご提出ください。</span></div>
+      <div class="sb-lead">メールにPDFを添付してご提出ください。</div>
+      <div class="sb-card">
+        <div class="sb-label">宛先メールアドレス</div>
+        <div class="sb-value">misakikaku33@gmail.com</div>
+        <div class="sb-label">メールの件名</div>
+        <div class="sb-value">[お名前]、請求書</div>
+        <div class="sb-label">メールの本文</div>
+        <div class="sb-value" style="margin-bottom:0">出演日、公演名</div>
+      </div>
+      <div class="sb-why">件名にお名前を載せるのは誰からの送信かが間違いなくわかるため、「請求書」の文字を入れるのはメールの振り分けが行われ漏れなく確認しやすくなるためです。ご協力をお願いします。</div>`;
+  } else {
+    box.className = "submitbox neutral";
+    box.innerHTML = `
+      <div class="sb-lead">ミサキカク以外の団体宛の請求書です。</div>
+      <div class="sb-why">提出方法(メール/フォームなど)は、提出先の団体から案内されている提出方法に従ってください。</div>`;
+  }
+}
+
 /* ---------- master update ---------- */
 function updateAll(rerenderRows){
   const c = calc();
   renderCalc(c);
   renderSheet(c);
   updateRail(c);
+  renderSubmitBox();
   scaleSheet();
 }
 document.querySelectorAll("input,textarea,select").forEach(el=>{

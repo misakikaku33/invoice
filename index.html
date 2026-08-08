@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -414,15 +413,34 @@ footer.foot{
 #invoiceSheet .inv-notes{margin-top:22px;font-size:12px;color:#333;white-space:pre-line}
 #invoiceSheet .inv-notes .notes-title{font-weight:700;margin-bottom:2px}
 
-/* ---------- print ---------- */
+/* ---------- print ----------
+   注意:#printArea は .app の子孫なので、.app を display:none にすると
+   子孫でいくら display を指定しても表示されない(印刷が白紙になる)。
+   そこで「祖先の連鎖だけ残し、兄弟をすべて隠す」方式にしている。 */
 @media print{
   @page{size:A4;margin:0}
-  body{background:#fff}
-  .app{display:none!important}
-  #printArea{display:block!important;position:static!important}
-  #invoiceSheet{width:210mm;min-height:296mm;padding:15mm 16mm;margin:0}
+  html,body{background:#fff!important}
+  /* .app 直下は #step4 以外すべて非表示 */
+  .app > *{display:none!important}
+  .app > #step4{display:block!important}
+  /* #step4 直下は .preview-wrap 以外すべて非表示 */
+  #step4 > *{display:none!important}
+  #step4 > .preview-wrap{display:block!important}
+  /* 祖先のレイアウト装飾をリセット */
+  .app{max-width:none!important;margin:0!important;padding:0!important}
+  #step4{background:none!important;border:none!important;border-radius:0!important;
+         box-shadow:none!important;margin:0!important;padding:0!important}
+  .preview-wrap{background:none!important;padding:0!important;
+                border-radius:0!important;overflow:visible!important}
   .sheet-scaler{transform:none!important;width:auto!important;height:auto!important}
-  .preview-wrap{all:unset}
+  #printArea{position:static!important}
+  #invoiceSheet{width:210mm;min-height:296mm;padding:15mm 16mm;margin:0}
+  /* 発行日ブロックは印刷時の余白(15mm/16mm)に合わせる */
+  #invoiceSheet .inv-meta{top:15mm!important;right:16mm!important}
+  /* 品目表が2ページにまたがるときの体裁 */
+  #invoiceSheet table.inv-items tr{page-break-inside:avoid}
+  #invoiceSheet table.inv-totals{page-break-inside:avoid}
+  #invoiceSheet .inv-bank{page-break-inside:avoid}
 }
 #printArea{position:relative}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -461,7 +479,7 @@ footer.foot{
   <p class="step-desc">「誰からの請求か」を伝える部分です。この欄の内容は、この端末のこのブラウザに自動で保存され、次回開いたときも残ります。<button type="button" id="clearSavedBtn" style="border:none;background:none;color:var(--shu);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit">保存内容を削除</button></p>
 
   <div class="field">
-    <label>お名前<span class="req">必須</span></label>
+    <label for="fromName">お名前<span class="req">必須</span></label>
     <input type="text" id="fromName" placeholder="例:岬 花子(芸名:美咲 はな)">
     <div class="hint">振込先の口座名義と請求者名が一致していると経理処理がスムーズです。芸名で活動している方は「本名(芸名:◯◯)」の併記が安心です。</div>
   </div>
@@ -472,24 +490,24 @@ footer.foot{
   </details>
 
   <div class="field">
-    <label>住所<span class="opt">推奨</span></label>
+    <label for="fromAddr">住所<span class="opt">推奨</span></label>
     <input type="text" id="fromAddr" placeholder="例:〒150-0000 東京都渋谷区◯◯ 1-2-3">
     <div class="hint">正式な書類として扱ってもらうために書くのが一般的です。</div>
   </div>
 
   <div class="grid2">
     <div class="field">
-      <label>電話番号<span class="opt">任意</span></label>
+      <label for="fromTel">電話番号<span class="opt">任意</span></label>
       <input type="text" id="fromTel" placeholder="例:090-0000-0000">
     </div>
     <div class="field">
-      <label>メールアドレス<span class="opt">任意</span></label>
+      <label for="fromMail">メールアドレス<span class="opt">任意</span></label>
       <input type="text" id="fromMail" placeholder="例:hana@example.com">
     </div>
   </div>
 
   <div class="field">
-    <label>インボイス登録番号<span class="opt">任意</span></label>
+    <label for="fromInvoiceNo">インボイス登録番号<span class="opt">任意</span></label>
     <input type="text" id="fromInvoiceNo" placeholder="例:T1234567890123">
     <div class="hint">登録していない方(免税事業者)は空欄のままでOKです。</div>
   </div>
@@ -503,12 +521,12 @@ footer.foot{
   <div class="field">
     <label>振込先口座<span class="req">必須</span></label>
     <div class="grid2">
-      <input type="text" id="bankName" placeholder="銀行名(例:◯◯銀行)">
-      <input type="text" id="bankBranch" placeholder="支店名(例:渋谷支店)">
+      <input type="text" id="bankName" aria-label="銀行名" placeholder="銀行名(例:◯◯銀行)">
+      <input type="text" id="bankBranch" aria-label="支店名" placeholder="支店名(例:渋谷支店)">
     </div>
     <div class="grid2" style="margin-top:8px">
-      <input type="text" id="bankType" placeholder="種別・口座番号(例:普通 1234567)">
-      <input type="text" id="bankHolder" placeholder="口座名義カナ(例:ミサキ ハナコ)">
+      <input type="text" id="bankType" aria-label="種別・口座番号" placeholder="種別・口座番号(例:普通 1234567)">
+      <input type="text" id="bankHolder" aria-label="口座名義カナ" placeholder="口座名義カナ(例:ミサキ ハナコ)">
     </div>
     <div class="hint">口座名義は通帳・アプリに表示される<b>カタカナ表記そのまま</b>を書きます。1文字違うと振込エラーになることがあります。</div>
   </div>
@@ -530,7 +548,7 @@ footer.foot{
   </div>
 
   <div class="field">
-    <label>宛名<span class="req">必須</span></label>
+    <label for="toName">宛名<span class="req">必須</span></label>
     <input type="text" id="toName" placeholder="例:ミサキカク 御中">
   </div>
 
@@ -542,7 +560,7 @@ footer.foot{
   </details>
 
   <div class="field">
-    <label>宛先住所<span class="opt">任意</span></label>
+    <label for="toAddr">宛先住所<span class="opt">任意</span></label>
     <textarea id="toAddr" rows="2" placeholder="相手の住所が分かる場合に記入(不明なら空欄でOK)"></textarea>
   </div>
 </section>
@@ -553,14 +571,14 @@ footer.foot{
   <p class="step-desc">「何の代金をいくら請求するか」。このツールがぜんぶ計算します。</p>
 
   <div class="field">
-    <label>出演日<span class="opt">推奨</span></label>
+    <label for="perfDate">出演日<span class="opt">推奨</span></label>
     <input type="date" id="perfDate" autocomplete="off">
     <div class="hint">支払期限の自動計算に使います(空欄でも作成できます)。複数日にわたる出演の場合は<b>最終日</b>を入力してください。</div>
   </div>
 
   <div class="grid2" style="column-gap:28px">
     <div class="field">
-      <label>発行日<span class="req">必須</span></label>
+      <label for="issueDate">発行日<span class="req">必須</span></label>
       <div style="display:flex;gap:6px">
         <input type="date" id="issueDate" autocomplete="off" style="flex:1">
         <button type="button" id="todayBtn" class="preset-btn ghost" style="padding:9px 12px;font-size:12px;white-space:nowrap">今日</button>
@@ -568,9 +586,12 @@ footer.foot{
       <div class="hint">請求書を作った日でOKです。出演日と同じ日付になっていないか、念のため確認してください。</div>
     </div>
     <div class="field">
-      <label>お支払期限<span class="opt">推奨</span></label>
-      <input type="date" id="dueDate" autocomplete="off">
-      <div class="hint">出演日・発行日から自動計算されます。手入力で上書きもできます。</div>
+      <label for="dueDate">お支払期限<span class="opt">推奨</span></label>
+      <div style="display:flex;gap:6px">
+        <input type="date" id="dueDate" autocomplete="off" style="flex:1">
+        <button type="button" id="dueAutoBtn" class="preset-btn ghost" style="padding:9px 12px;font-size:12px;white-space:nowrap;display:none">↺ 自動</button>
+      </div>
+      <div class="hint">出演日・発行日から自動計算されます(月末が銀行休業日なら翌銀行営業日)。手入力で上書きもできます(「↺ 自動」で計算に戻ります)。</div>
     </div>
   </div>
 
@@ -579,18 +600,20 @@ footer.foot{
     <p><b>ミサキカクの基本ルールは「出演月の翌月末払い」</b>です。請求書を出すタイミングによって、少しだけ扱いが変わります。</p>
     <p><b>①請求書の発行日が、出演日の翌月25日までの場合</b> → 支払期限は<b>出演日の翌月末</b></p>
     <p><b>②発行日が、出演日の翌月25日を過ぎた場合</b> → 支払期限は<b>発行日の翌月末</b>(1か月後ろ倒し)</p>
-    <p>月末が土日や祝日にあたるときは、<b>その翌平日</b>にずれます。出演日を入力すると自動で計算されるので、基本は自動入力のままでOKです。</p>
+    <p>その月末が<b>銀行の休業日</b>にあたるときは、<b>翌銀行営業日</b>にずれます。銀行の休業日は<b>土曜・日曜・祝日(振替休日を含む)・年末年始(12/31〜1/3)</b>です。</p>
+    <p>そのため<b>月をまたぐことがあります</b>。たとえば1月31日が土曜なら支払期限は2月2日(月)に、12月末なら翌年1月4日以降になります。</p>
+    <p>出演日を入力すると自動で計算されるので、基本は自動入力のままでOKです。手で書き換えたあと自動計算に戻したいときは「↺ 自動」を押してください。</p>
     <p>※他団体宛の請求書については、このルールではなくその団体との取り決めに従ってください。</p>
   </details>
 
   <div class="grid2">
     <div class="field">
-      <label>請求書番号<span class="opt">任意</span></label>
+      <label for="invNo">請求書番号<span class="opt">任意</span></label>
       <input type="text" id="invNo" placeholder="例:20260717-01">
       <div class="hint">自分の管理用の通し番号です。「日付+連番」が簡単でおすすめ。</div>
     </div>
     <div class="field">
-      <label>件名<span class="opt">任意</span></label>
+      <label for="subject">件名<span class="opt">任意</span></label>
       <input type="text" id="subject" placeholder="例:7月公演 出演料の件">
     </div>
   </div>
@@ -637,7 +660,7 @@ footer.foot{
   </details>
 
   <div class="field">
-    <label>備考<span class="opt">任意</span></label>
+    <label for="notes">備考<span class="opt">任意</span></label>
     <textarea id="notes" rows="2" placeholder="例:お手数ですが、振込手数料のご負担をお願いいたします。"></textarea>
     <div class="hint">振込手数料をどちらが負担するかは、事前に取り決めがあればそれに従います。</div>
   </div>
@@ -713,9 +736,11 @@ const CLS = {
   t8:{label:"立替(8%)", sheet:"立替 8%"},
   t0:{label:"対象外(0%)", sheet:"対象外"}
 };
-let items = [
-  {desc:"", qty:1, price:"", cls:"r10"}
-];
+/* tpl:プリセット由来の雛形文字列(「◯月◯日」を含む)。
+   出演日を変更するたびに desc を tpl から作り直すので、日付を直しても追従する。
+   ユーザーが desc を手入力した時点で tpl は null になり、以後上書きされない。 */
+const newItem = () => ({desc:"", qty:1, price:"", cls:"r10", tpl:null});
+let items = [ newItem() ];
 
 /* ---------- init dates & invoice no ---------- */
 const today = new Date();
@@ -750,6 +775,15 @@ function holidaySetForYear(year){
   add(nthMonday(year,9,2));   // スポーツの日
   add(new Date(year,2,vernalEquinoxDay(year)));   // 春分の日
   add(new Date(year,8,autumnalEquinoxDay(year))); // 秋分の日
+  // 国民の休日:前後を祝日に挟まれた平日(例:敬老の日と秋分の日の間の火曜)
+  Array.from(set).forEach(ds => {
+    const d = new Date(ds);
+    const gap = new Date(d); gap.setDate(gap.getDate()+1);
+    const after = new Date(d); after.setDate(after.getDate()+2);
+    if(gap.getDay()!==0 && !set.has(gap.toDateString()) && set.has(after.toDateString())){
+      set.add(gap.toDateString());
+    }
+  });
   // 振替休日:祝日が日曜のとき、その後の最初の非祝日を休日に
   Array.from(set).forEach(ds => {
     const d = new Date(ds);
@@ -764,18 +798,35 @@ function holidaySetForYear(year){
 }
 function isJPHoliday(date){ return holidaySetForYear(date.getFullYear()).has(date.toDateString()); }
 function isWeekend(date){ const d = date.getDay(); return d===0 || d===6; }
-function nextBusinessDay(date){
+/* 金融機関の年末年始休業(12/31〜1/3)。祝日ではないが振込ができない日。 */
+function isBankYearEnd(date){
+  const m = date.getMonth(), d = date.getDate();
+  return (m===11 && d===31) || (m===0 && d<=3);
+}
+/* 銀行休業日 = 土日 + 祝日(振替休日・国民の休日を含む) + 年末年始 */
+function isBankClosed(date){ return isWeekend(date) || isJPHoliday(date) || isBankYearEnd(date); }
+/* 翌銀行営業日(その日が営業日ならその日を返す) */
+function nextBankBusinessDay(date){
   const d = new Date(date);
-  while(isWeekend(d) || isJPHoliday(d)) d.setDate(d.getDate()+1);
+  let guard = 0;
+  while(isBankClosed(d) && guard++ < 30) d.setDate(d.getDate()+1);
   return d;
 }
-function addMonths(date, n){ const d = new Date(date); d.setMonth(d.getMonth()+n); return d; }
+/* 月末日を渡したときに桁あふれしないよう、月末でクランプする。
+   例:1月31日 + 1か月 → 「2月31日」= 3月3日 ではなく 2月28日 になる。 */
+function addMonths(date, n){
+  const y = date.getFullYear(), m = date.getMonth() + n, d = date.getDate();
+  const lastDay = new Date(y, m + 1, 0).getDate();
+  return new Date(y, m, Math.min(d, lastDay));
+}
 function lastDayOfMonth(date){ return new Date(date.getFullYear(), date.getMonth()+1, 0); }
 
 /* ---------- due date auto-calc ----------
    ①発行日が「出演日の翌月25日」までなら → 出演日の翌月末
    ②それを過ぎたら → 発行日の翌月末
-   月末が土日祝なら翌平日にずらす。出演日が未入力なら発行日基準で翌月末。 */
+   月末が銀行休業日(土日・祝日・年末年始)なら翌銀行営業日にずらす。
+   月をまたぐ場合(1/31が土曜 → 2/2 など)もそのまま繰り下げる。
+   出演日が未入力なら発行日基準で翌月末。 */
 function computeDueDate(){
   const issueStr = $("issueDate").value;
   if(!issueStr) return "";
@@ -790,19 +841,51 @@ function computeDueDate(){
   } else {
     dueMonthAnchor = addMonths(issue, 1);
   }
-  const due = nextBusinessDay(lastDayOfMonth(dueMonthAnchor));
+  const eom = lastDayOfMonth(dueMonthAnchor);
+  /* 月末が銀行休業日なら翌銀行営業日に繰り下げる。
+     12月末も例外扱いせず、そのまま翌年(1/4以降)へ繰り越す。 */
+  const due = nextBankBusinessDay(eom);
   return ymd(due);
 }
-function autoFillDueDate(){ $("dueDate").value = computeDueDate(); }
-$("issueDate").addEventListener("change", () => { autoFillDueDate(); updateAll(false); });
+/* 支払期限を手入力で上書きしたら、以後は自動計算で潰さない */
+let dueDateTouched = false;
+function autoFillDueDate(){
+  if(dueDateTouched) return;
+  $("dueDate").value = computeDueDate();
+}
+$("dueDate").addEventListener("input", () => {
+  dueDateTouched = true;
+  $("dueAutoBtn").style.display = "inline-flex";
+});
+$("dueAutoBtn").addEventListener("click", () => {
+  dueDateTouched = false;
+  autoFillDueDate();
+  $("dueAutoBtn").style.display = "none";
+  updateAll();
+});
+$("issueDate").addEventListener("change", () => { autoFillDueDate(); updateAll(); });
 $("todayBtn").addEventListener("click", () => {
   $("issueDate").value = ymd(new Date());
-  autoFillDueDate(); updateAll(false);
+  autoFillDueDate(); updateAll();
 });
-$("perfDate").addEventListener("change", () => { autoFillDueDate(); updateAll(false); });
+/* 出演日:支払期限の再計算と、雛形品目への日付差し込みをまとめて行う。
+   refreshTemplatedItems() は後方で定義されるが、実行時には解決済み。 */
+$("perfDate").addEventListener("change", () => {
+  autoFillDueDate();
+  if(refreshTemplatedItems()) renderItems();
+  updateAll();
+});
 autoFillDueDate();
 
 /* ---------- item rows ---------- */
+/* 行の金額。数量・単価のどちらかが未入力なら null(＝「－」表示)。
+   小数入力された場合も画面・請求書・合計のすべてで同じ丸め方(四捨五入)にする。 */
+function lineAmount(it){
+  if(it.qty==="" || it.price==="") return null;
+  const q = Number(it.qty), p = Number(it.price);
+  if(!isFinite(q) || !isFinite(p)) return null;
+  return Math.round(q*p);
+}
 function renderItems(){
   const box = $("itemRows");
   box.innerHTML = "";
@@ -820,11 +903,11 @@ function renderItems(){
         <div class="ic-f"><label>区分</label>
           <select data-i="${i}" data-k="cls">${opts}</select></div>
         <div class="ic-f"><label>数量</label>
-          <input type="number" data-i="${i}" data-k="qty" value="${esc(it.qty)}" min="0" inputmode="numeric"></div>
+          <input type="number" data-i="${i}" data-k="qty" value="${esc(it.qty)}" min="0" step="1" inputmode="numeric"></div>
         <div class="ic-f"><label>単価(円)</label>
-          <input type="number" data-i="${i}" data-k="price" value="${esc(it.price)}" min="0" inputmode="numeric" placeholder="10000"></div>
+          <input type="number" data-i="${i}" data-k="price" value="${esc(it.price)}" min="0" step="1" inputmode="numeric" placeholder="10000"></div>
         <div class="ic-amt"><label>金額</label>
-          <span class="v">${it.qty && it.price ? yen(it.qty*it.price) : "－"}</span></div>
+          <span class="v">${lineAmount(it)!==null ? yen(lineAmount(it)) : "－"}</span></div>
       </div>`;
     box.appendChild(card);
   });
@@ -832,23 +915,27 @@ function renderItems(){
 function onItemEdit(e){
   const i = e.target.dataset.i, k = e.target.dataset.k;
   if(i===undefined) return;
-  if(k==="desc" || k==="cls") items[i][k] = e.target.value;
+  if(k==="desc"){
+    items[i].desc = e.target.value;
+    items[i].tpl = null; // 手入力されたら自動差し込みの対象から外す
+  }
+  else if(k==="cls") items[i].cls = e.target.value;
   else items[i][k] = e.target.value===""?"":Number(e.target.value);
   // update amount display of this card only
   const card = e.target.closest(".item-card");
   const it = items[i];
-  card.querySelector(".ic-amt .v").textContent = it.qty && it.price ? yen(it.qty*it.price) : "－";
-  updateAll(false);
+  card.querySelector(".ic-amt .v").textContent = lineAmount(it)!==null ? yen(lineAmount(it)) : "－";
+  updateAll();
 }
 $("itemRows").addEventListener("input", onItemEdit);
 $("itemRows").addEventListener("change", onItemEdit);
 $("itemRows").addEventListener("click", e => {
   const d = e.target.dataset.del;
-  if(d!==undefined){ items.splice(Number(d),1); renderItems(); updateAll(true); }
+  if(d!==undefined){ items.splice(Number(d),1); renderItems(); updateAll(); }
 });
 $("addRowBtn").addEventListener("click", () => {
-  items.push({desc:"", qty:1, price:"", cls:"r10"});
-  renderItems(); updateAll(true);
+  items.push(newItem());
+  renderItems(); updateAll();
 });
 
 /* ---------- Misakikaku presets ---------- */
@@ -863,15 +950,31 @@ function perfDateJp(){
   const d = parseYmd(v);
   return `${d.getMonth()+1}月${d.getDate()}日`;
 }
+/* 雛形文字列から実際の表示文字列を作る(出演日が未入力なら「◯月◯日」のまま) */
+function renderTpl(tpl){
+  const dj = perfDateJp();
+  return dj ? tpl.split("◯月◯日").join(dj) : tpl;
+}
+/* 出演日が変わったら、雛形を持つ品目をすべて作り直す(手入力済みの行は触らない) */
+function refreshTemplatedItems(){
+  let changed = false;
+  items.forEach(it => {
+    if(it.tpl){
+      const next = renderTpl(it.tpl);
+      if(next !== it.desc){ it.desc = next; changed = true; }
+    }
+  });
+  return changed;
+}
 function applyMisakikaku(subjectText, itemText, btnId){
   $("toName").value = "ミサキカク 御中";
   $("toAddr").value = MISAKIKAKU_ADDR;
   $("subject").value = subjectText;
-  const dj = perfDateJp();
-  items[0].desc = dj ? itemText.replace("◯月◯日", dj) : itemText;
+  items[0].tpl = itemText;
+  items[0].desc = renderTpl(itemText);
   setTaxMode("incl"); // ミサキカクは総額(税込)取引
   markActive(btnId);
-  renderItems(); updateAll(true);
+  renderItems(); updateAll();
 }
 $("presetWeeklyBtn").addEventListener("click", () => {
   applyMisakikaku("「ミサキカク毎週公演」出演料の件", "出演料(◯月◯日「ミサキカク毎週公演」)", "presetWeeklyBtn");
@@ -883,24 +986,10 @@ $("clearToBtn").addEventListener("click", () => {
   $("toName").value = "";
   $("toAddr").value = "";
   $("subject").value = "";
-  items = [{desc:"", qty:1, price:"", cls:"r10"}];
+  items = [ newItem() ];
   setTaxMode("excl");
   markActive(null);
-  renderItems(); updateAll(true);
-});
-/* 出演日をあとから入力/変更したとき、未入力プレースホルダー「◯月◯日」が
-   残っている品目があれば実際の日付に転記する(手入力済みの内容は上書きしない) */
-$("perfDate").addEventListener("change", () => {
-  const dj = perfDateJp();
-  if(!dj) return;
-  let changed = false;
-  items.forEach(it => {
-    if(it.desc && it.desc.includes("◯月◯日")){
-      it.desc = it.desc.replace("◯月◯日", dj);
-      changed = true;
-    }
-  });
-  if(changed){ renderItems(); updateAll(false); }
+  renderItems(); updateAll();
 });
 
 /* ---------- calculations ---------- */
@@ -911,7 +1000,7 @@ function calc(){
   // 区分ごとの合計
   let rewardRaw = 0, tate10 = 0, tate8 = 0, t0 = 0;
   items.forEach(it => {
-    const a = (Number(it.qty)||0) * (Number(it.price)||0);
+    const a = lineAmount(it) || 0;
     if(it.cls==="t10") tate10 += a;
     else if(it.cls==="t8") tate8 += a;
     else if(it.cls==="t0") t0 += a;
@@ -989,7 +1078,7 @@ function renderSheet(c){
       <td class="c">${CLS[it.cls] ? CLS[it.cls].sheet : "10%"}</td>
       <td class="c">${it.qty!==""?esc(it.qty):""}</td>
       <td class="r">${it.price!==""?Number(it.price).toLocaleString("ja-JP"):""}</td>
-      <td class="r">${it.qty!==""&&it.price!==""?(it.qty*it.price).toLocaleString("ja-JP"):""}</td>
+      <td class="r">${lineAmount(it)!==null?lineAmount(it).toLocaleString("ja-JP"):""}</td>
     </tr>`).join("");
 
   const emptyRows = Math.max(0, 4 - items.filter(it=>it.desc||it.price).length);
@@ -1039,7 +1128,11 @@ function renderSheet(c){
     <div class="inv-greeting">下記のとおりご請求申し上げます。</div>
     <div class="inv-amountbox">
       <span class="lbl">ご請求金額</span>
-      <span class="val">${yen(c.due)}${c.taxMode!=="none" ? '<span style="font-size:14px">（税込）</span>' : ""}</span>
+      <span class="val">${yen(c.due)}${
+        c.taxMode!=="none"
+          ? `<span style="font-size:13px">（税込${c.withhold?"・源泉徴収後":""}）</span>`
+          : (c.withhold ? '<span style="font-size:13px">（源泉徴収後）</span>' : "")
+      }</span>
     </div>
     <table class="inv-items">
       <thead><tr><th style="width:42%">内容</th><th style="width:13%">区分</th><th style="width:10%">数量</th><th style="width:17%">単価(円)</th><th style="width:18%">金額(円)</th></tr></thead>
@@ -1085,11 +1178,20 @@ function scaleSheet(){
 window.addEventListener("resize", () => { scaleSheet(); });
 
 /* ---------- submission method (step 5) ---------- */
+/* 宛名は「ミサキカク 御中」以外にも「ミサキカク御中」「ミサキカク 平野様」など
+   書き換えられる可能性があるため、全角/半角スペースを除いた部分一致で判定する。 */
+function isMisakikakuName(s){
+  return s.replace(/[\s\u3000]/g, "").includes("ミサキカク");
+}
 function renderSubmitBox(){
   const toName = $("toName").value.trim();
-  const isMisakikaku = toName === "ミサキカク 御中";
   const box = $("submitArea");
-  if(isMisakikaku){
+  if(isMisakikakuName(toName)){
+    /* 件名は実際のお名前を差し込んだ「そのままコピーできる形」で見せる */
+    const myName = $("fromName").value.trim();
+    const subjLine = myName
+      ? `${esc(myName)}、請求書`
+      : `<span style="color:var(--muted)">［STEP一 のお名前が入ります］、請求書</span>`;
     box.className = "submitbox";
     box.innerHTML = `
       <div class="sb-note"><span class="mark">✉️</span><span>ミサキカク宛はメール提出のみです。メールでご提出ください。</span></div>
@@ -1098,7 +1200,7 @@ function renderSubmitBox(){
         <div class="sb-label">宛先メールアドレス</div>
         <div class="sb-value">misakikaku33@gmail.com</div>
         <div class="sb-label">メールの件名</div>
-        <div class="sb-value">[お名前]、請求書</div>
+        <div class="sb-value">${subjLine}</div>
         <div class="sb-label">メールの本文</div>
         <div class="sb-value" style="margin-bottom:0">出演日、公演名</div>
       </div>
@@ -1112,7 +1214,7 @@ function renderSubmitBox(){
 }
 
 /* ---------- master update ---------- */
-function updateAll(rerenderRows){
+function updateAll(){
   const c = calc();
   renderCalc(c);
   renderSheet(c);
@@ -1121,10 +1223,10 @@ function updateAll(rerenderRows){
   scaleSheet();
 }
 document.querySelectorAll("input,textarea,select").forEach(el=>{
-  el.addEventListener("input", ()=>updateAll(false));
+  el.addEventListener("input", ()=>updateAll());
 });
 document.querySelectorAll('input[name="taxMode"], #withholdChk').forEach(el=>{
-  el.addEventListener("change", ()=>updateAll(false));
+  el.addEventListener("change", ()=>updateAll());
 });
 
 /* ---------- output ---------- */
@@ -1139,8 +1241,18 @@ function buildFileBaseName(){
 $("pngBtn").addEventListener("click", async () => {
   const btn = $("pngBtn");
   btn.disabled = true; btn.textContent = "作成中…";
+  /* 親に transform:scale() が掛かったまま撮ると環境によって欠けるので、
+     撮影中だけ等倍に戻し、終わったら元に戻す */
+  const scaler = $("sheetScaler");
+  const keep = {transform:scaler.style.transform, height:scaler.style.height};
+  scaler.style.transform = "none";
+  scaler.style.height = "auto";
   try{
-    const canvas = await html2canvas($("invoiceSheet"), {scale:2, backgroundColor:"#ffffff", useCORS:true});
+    const canvas = await html2canvas($("invoiceSheet"), {
+      scale:2, backgroundColor:"#ffffff", useCORS:true,
+      width:794, windowWidth:794,
+      scrollX:0, scrollY:-window.scrollY
+    });
     const a = document.createElement("a");
     a.download = `${buildFileBaseName()}.png`;
     a.href = canvas.toDataURL("image/png");
@@ -1148,6 +1260,9 @@ $("pngBtn").addEventListener("click", async () => {
   }catch(e){
     alert("画像の作成に失敗しました。もう一度お試しください。");
   }finally{
+    scaler.style.transform = keep.transform;
+    scaler.style.height = keep.height;
+    scaleSheet();
     btn.disabled = false; btn.textContent = "🖼 画像で保存(PNG)";
   }
 });
@@ -1187,17 +1302,17 @@ $("clearSavedBtn").addEventListener("click", () => {
   if(!confirm("この端末に保存されている「あなたの情報」を削除します。よろしいですか?")) return;
   try{ localStorage.removeItem(ISSUER_STORAGE_KEY); }catch(e){}
   ISSUER_FIELDS.forEach(id => { $(id).value = ""; });
-  updateAll(true);
+  updateAll();
 });
 
 /* ---------- boot ---------- */
 loadIssuerInfo();
 renderItems();
-updateAll(true);
+updateAll();
 setTimeout(scaleSheet, 300); // after fonts settle
 // スマホでページを戻る/進むで復元された(bfcache)ときも、
 // 実際の入力欄の値でプレビューを必ず作り直す
-window.addEventListener("pageshow", (e) => { if(e.persisted) updateAll(true); });
+window.addEventListener("pageshow", (e) => { if(e.persisted) updateAll(); });
 })();
 </script>
 </body>

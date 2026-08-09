@@ -323,6 +323,37 @@ details.guide p b{color:var(--shu)}
 }
 .submitbox .sb-card .sb-value:last-child{margin-bottom:0}
 .submitbox .sb-why{font-size:12.5px;color:#CBD8E6;line-height:1.7}
+/* mail launch buttons */
+.submitbox .sb-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.submitbox .sb-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  border:none;border-radius:10px;cursor:pointer;
+  font-family:inherit;font-weight:700;line-height:1.4;
+  padding:13px 18px;font-size:15px;
+  transition:filter .12s ease, transform .06s ease;
+}
+.submitbox .sb-btn:active{transform:translateY(1px)}
+.submitbox .sb-btn:hover{filter:brightness(1.06)}
+.submitbox .sb-btn.primary{flex:1 1 220px;background:#E5C77E;color:#17304A}
+.submitbox .sb-btn.sub{
+  flex:0 1 auto;background:rgba(255,255,255,.14);color:#fff;
+  font-size:13.5px;padding:13px 14px;font-weight:600;
+}
+.submitbox.neutral .sb-btn.primary{background:var(--ink);color:#fff}
+.submitbox.neutral .sb-btn.sub{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.submitbox .sb-attach{
+  display:flex;gap:9px;align-items:flex-start;
+  background:rgba(255,255,255,.10);border-radius:10px;
+  padding:11px 14px;margin-bottom:14px;
+  font-size:12.5px;line-height:1.65;color:#EAF0F6;
+}
+.submitbox.neutral .sb-attach{background:#FFF6E3;color:#6B5326;border:1px solid #EBD9AC}
+.submitbox .sb-attach b{color:#fff}
+.submitbox.neutral .sb-attach b{color:#6B5326}
+.submitbox .sb-toast{
+  font-size:12.5px;color:#EAF0F6;margin-bottom:12px;min-height:0;
+}
+.submitbox.neutral .sb-toast{color:var(--muted)}
 .submitbox .sb-other{
   margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.2);
   font-size:13px;color:#CBD8E6;
@@ -703,7 +734,7 @@ footer.foot{
 <!-- ================= STEP 5 ================= -->
 <section class="step" id="step5">
   <div class="step-head"><div class="num">五</div><h2>提出する</h2></div>
-  <p class="step-desc">作った請求書を、正しい方法で提出しましょう。</p>
+  <p class="step-desc">作った請求書を、正しい方法で提出しましょう。ボタンからメールの下書きを自動で作れます(<b>PDFの添付だけは手作業</b>です)。</p>
 
   <div id="submitArea"></div>
 
@@ -1183,6 +1214,102 @@ window.addEventListener("resize", () => { scaleSheet(); });
 function isMisakikakuName(s){
   return s.replace(/[\s\u3000]/g, "").includes("ミサキカク");
 }
+/* ---------- mail draft ----------
+   mailto: は仕様上「添付ファイル」を指定できないため、PDFは必ず手動添付になる。
+   本文はミサキカク指定の「出演日・公演名」を必ず含める。 */
+const MISAKIKAKU_MAIL = "misakikaku33@gmail.com";
+function mailSubject(){
+  const myName = $("fromName").value.trim();
+  return `${myName || "[お名前]"}、請求書`;
+}
+function mailBody(){
+  const toName   = $("toName").value.trim();
+  const myName   = $("fromName").value.trim();
+  const perfJp   = perfDateJp();
+  const perfFull = $("perfDate").value ? (() => {
+    const d = parseYmd($("perfDate").value);
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  })() : "";
+  const title    = $("subject").value.trim();
+  const c        = calc();
+  const due      = $("dueDate").value ? (() => {
+    const d = parseYmd($("dueDate").value);
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
+  })() : "";
+
+  const greetName = isMisakikakuName(toName) ? "ミサキカク ご担当者様" : (toName || "ご担当者様");
+  const L = [];
+  L.push(greetName, "");
+  L.push(`お世話になっております。${myName || "[お名前]"}です。`);
+  L.push(`${perfJp ? perfJp + "公演" : "下記公演"}の請求書をお送りいたします。`, "");
+  L.push(`出演日：${perfFull || "（未入力）"}`);
+  L.push(`公演名：${title || "（未入力）"}`);
+  if(c.due > 0) L.push(`ご請求金額：${yen(c.due)}`);
+  if(due)       L.push(`お支払期限：${due}`);
+  L.push("", "請求書はPDFにて添付しております。", "ご確認のほど、よろしくお願いいたします。");
+  const sign = [myName, $("fromMail").value.trim(), $("fromTel").value.trim()].filter(Boolean);
+  if(sign.length) L.push("", "――――――――――", ...sign);
+  return L.join("\r\n");
+}
+function mailTo(){
+  return isMisakikakuName($("toName").value.trim()) ? MISAKIKAKU_MAIL : "";
+}
+function openMailApp(){
+  const url = `mailto:${encodeURIComponent(mailTo())}`
+    + `?subject=${encodeURIComponent(mailSubject())}`
+    + `&body=${encodeURIComponent(mailBody())}`;
+  window.location.href = url;
+}
+function openGmail(){
+  const url = "https://mail.google.com/mail/?view=cm&fs=1"
+    + `&to=${encodeURIComponent(mailTo())}`
+    + `&su=${encodeURIComponent(mailSubject())}`
+    + `&body=${encodeURIComponent(mailBody())}`;
+  window.open(url, "_blank", "noopener");
+}
+async function copyMailText(){
+  const text = [
+    `宛先：${mailTo() || "（提出先のメールアドレス）"}`,
+    `件名：${mailSubject()}`,
+    "",
+    mailBody()
+  ].join("\r\n");
+  try{
+    await navigator.clipboard.writeText(text);
+    return true;
+  }catch(e){
+    // クリップボードAPIが使えない環境(古いSafari・非HTTPS)向けのフォールバック
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:-1000px;opacity:0";
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try{ ok = document.execCommand("copy"); }catch(_){}
+    ta.remove();
+    return ok;
+  }
+}
+/* 入力のたびに submitArea は作り直されるので、メッセージは変数に保持して再描画時に復元する */
+let mailToastMsg = "";
+function setMailToast(msg){
+  mailToastMsg = msg;
+  const t = $("mailToast");
+  if(t) t.textContent = msg;
+}
+function mailActionsHtml(){
+  return `
+    <div class="sb-attach">
+      <span>📎</span>
+      <span><b>先にPDFを保存してから</b>ボタンを押してください。メールの下書きは自動で作れますが、<b>PDFの添付だけは手作業</b>になります(メールの仕組み上、自動で添付できません)。</span>
+    </div>
+    <div class="sb-actions">
+      <button type="button" class="sb-btn primary" data-mail="app">✉️ メールの下書きを作る</button>
+      <button type="button" class="sb-btn sub" data-mail="gmail">Gmailで開く</button>
+      <button type="button" class="sb-btn sub" data-mail="copy">📋 本文をコピー</button>
+    </div>
+    <div class="sb-toast" id="mailToast">${esc(mailToastMsg)}</div>`;
+}
 function renderSubmitBox(){
   const toName = $("toName").value.trim();
   const box = $("submitArea");
@@ -1198,20 +1325,38 @@ function renderSubmitBox(){
       <div class="sb-lead">メールにPDFを添付してご提出ください。</div>
       <div class="sb-card">
         <div class="sb-label">宛先メールアドレス</div>
-        <div class="sb-value">misakikaku33@gmail.com</div>
+        <div class="sb-value">${MISAKIKAKU_MAIL}</div>
         <div class="sb-label">メールの件名</div>
         <div class="sb-value">${subjLine}</div>
         <div class="sb-label">メールの本文</div>
         <div class="sb-value" style="margin-bottom:0">出演日、公演名</div>
       </div>
+      ${mailActionsHtml()}
       <div class="sb-why">件名にお名前を載せるのは誰からの送信かが間違いなくわかるため、「請求書」の文字を入れるのはメールの振り分けが行われ漏れなく確認しやすくなるためです。ご協力をお願いします。</div>`;
   } else {
     box.className = "submitbox neutral";
     box.innerHTML = `
       <div class="sb-lead">ミサキカク以外の団体宛の請求書です。</div>
-      <div class="sb-why">提出方法(メール/フォームなど)は、提出先の団体から案内されている提出方法に従ってください。</div>`;
+      <div class="sb-why" style="margin-bottom:14px">提出方法(メール/フォームなど)は、提出先の団体から案内されている提出方法に従ってください。メールで送る場合は、下のボタンで下書きを作れます(宛先はご自身で入力してください)。</div>
+      ${mailActionsHtml()}`;
   }
 }
+/* ボタンは renderSubmitBox のたびに作り直されるので、イベントは委譲で1回だけ登録する */
+$("submitArea").addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-mail]");
+  if(!btn) return;
+  if(btn.dataset.mail === "app"){
+    setMailToast("メールアプリを開いています…　開かない場合は「Gmailで開く」か「本文をコピー」をお使いください。");
+    openMailApp();
+  } else if(btn.dataset.mail === "gmail"){
+    openGmail();
+    setMailToast("Gmailの作成画面を新しいタブで開きました。PDFの添付をお忘れなく。");
+  } else if(btn.dataset.mail === "copy"){
+    const ok = await copyMailText();
+    setMailToast(ok ? "宛先・件名・本文をコピーしました。メールに貼り付けてください。"
+                    : "コピーできませんでした。お使いの環境では手入力をお願いします。");
+  }
+});
 
 /* ---------- master update ---------- */
 function updateAll(){

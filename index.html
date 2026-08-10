@@ -1454,15 +1454,22 @@ $("pngBtn").addEventListener("click", async () => {
 });
 
 /* 印刷直前だけタブのタイトルをファイル名にする(PDF保存時の既定ファイル名になる)。
-   "afterprint" イベントは、スマホ(特にiOS Safari)では印刷シートを開いた直後に
-   発火してしまい、実際に「保存」を押す前にタイトルが元に戻ってしまうことがある。
-   そのため afterprint には頼らず、「次に入力を触ったとき」に戻す。 */
+   ここには2つのタイミング問題がある:
+   ①"afterprint"はスマホ(特にiOS Safari)では印刷シートを開いた直後に発火してしまい、
+     実際に「保存」を押す前にタイトルが元に戻ってしまうことがある
+     → afterprintには頼らず、「次に入力を触ったとき」に戻す。
+   ②document.titleを変更した直後にwindow.print()を呼ぶと、Android Chromeでは
+     ブラウザ側のタブ情報がまだ更新されておらず、印刷ダイアログに
+     古いタイトルのまま渡ってしまうことがある(iOS Safariでも起こりうる)
+     → 変更してから1フレーム待ってから印刷を呼ぶ。 */
 const originalTitle = document.title;
 let printTitleActive = false;
 $("printBtn").addEventListener("click", () => {
   document.title = buildFileBaseName();
   printTitleActive = true;
-  window.print();
+  /* rAF一回分だと端末によっては足りないことがあるため、
+     rAFで描画を1回はさんだ上にごく短いsetTimeoutも重ねて余裕を持たせる */
+  requestAnimationFrame(() => setTimeout(() => window.print(), 60));
 });
 document.addEventListener("input", () => {
   if(printTitleActive){ document.title = originalTitle; printTitleActive = false; }

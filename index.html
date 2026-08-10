@@ -447,9 +447,16 @@ footer.foot{
 /* ---------- print ----------
    注意:#printArea は .app の子孫なので、.app を display:none にすると
    子孫でいくら display を指定しても表示されない(印刷が白紙になる)。
-   そこで「祖先の連鎖だけ残し、兄弟をすべて隠す」方式にしている。 */
+   そこで「祖先の連鎖だけ残し、兄弟をすべて隠す」方式にしている。
+
+   もう1つ注意:@page{margin:0} を指定しても、実際のブラウザ(特にSafari/iOS、
+   Chromeのヘッダー・フッター表示時)は本当のゼロ余白では印刷しないことが多い。
+   #invoiceSheetを「A4いっぱい(210mm×296mm)」ちょうどに作ってしまうと、
+   ブラウザ側が数mmでも余白を足した瞬間にはみ出し、ほぼ白紙の2枚目が
+   できてしまう。そのため @page 側に本物の余白を持たせ、シート側は
+   実際に印刷できる範囲より十分小さい高さ(安全マージン付き)にしている。 */
 @media print{
-  @page{size:A4;margin:0}
+  @page{size:A4;margin:15mm 16mm}
   html,body{background:#fff!important}
   /* .app 直下は #step4 以外すべて非表示 */
   .app > *{display:none!important}
@@ -465,9 +472,17 @@ footer.foot{
                 border-radius:0!important;overflow:visible!important}
   .sheet-scaler{transform:none!important;width:auto!important;height:auto!important}
   #printArea{position:static!important}
-  #invoiceSheet{width:210mm;min-height:296mm;padding:15mm 16mm;margin:0}
-  /* 発行日ブロックは印刷時の余白(15mm/16mm)に合わせる */
-  #invoiceSheet .inv-meta{top:15mm!important;right:16mm!important}
+  /* 200mm は @page の余白(15mm/16mm)を引いた実寸より一回り小さい安全値。
+     ブラウザ側で余白が数mm増えても2枚目に溢れない。
+     min-heightなので、品目が多く実際の内容がこれより長ければ、
+     そのまま自然に2枚目へ続く(切り取られることはない)。 */
+  #invoiceSheet{width:100%;max-width:200mm;min-height:0;height:auto;
+                padding:0;margin:0}
+  /* .inv-meta が top:0/right:0 に来るため、タイトルがそこと重ならないよう
+     見出しの上に隙間を空ける(元のpadding:15mmに相当する分) */
+  #invoiceSheet .inv-title{margin-top:18mm}
+  /* 発行日ブロックは #invoiceSheet の左上基準(0,0)に統一(@page側で余白済み) */
+  #invoiceSheet .inv-meta{top:0!important;right:0!important}
   /* 品目表が2ページにまたがるときの体裁 */
   #invoiceSheet table.inv-items tr{page-break-inside:avoid}
   #invoiceSheet table.inv-totals{page-break-inside:avoid}
@@ -1398,10 +1413,36 @@ $("pngBtn").addEventListener("click", async () => {
       width:794, windowWidth:794,
       scrollX:0, scrollY:-window.scrollY
     });
-    const a = document.createElement("a");
-    a.download = `${buildFileBaseName()}.png`;
-    a.href = canvas.toDataURL("image/png");
-    a.click();
+    const filename = `${buildFileBaseName()}.png`;
+    /* toDataURL()+<a download> は iOS Safari では保存が完了しないことがある
+       (data: URLのダウンロードに未対応。data: のまま止まって見える)。
+       Blob化してから、Web Share APIが使える環境ではその場で共有シートを出し、
+       使えない環境では新しいタブに開いて「長押しで保存」してもらう。 */
+    const blob = await new Promise(res => canvas.toBlob(res, "image/png"));
+    if(!blob) throw new Error("blob作成に失敗");
+
+    const file = new File([blob], filename, {type:"image/png"});
+    if(navigator.canShare && navigator.canShare({files:[file]})){
+      try{
+        await navigator.share({files:[file], title:filename});
+      }catch(shareErr){
+        if(shareErr.name !== "AbortError") throw shareErr; // ユーザーが共有をキャンセルしただけなら何もしない
+      }
+    } else if("download" in document.createElement("a") && !/iP(hone|ad|od)/.test(navigator.userAgent)){
+      /* Blob URLはPC/Androidの主要ブラウザなら download 属性で確実に保存できる */
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.download = filename;
+      a.href = url;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } else {
+      /* Web Share非対応のiOS Safari(古いバージョン)向けフォールバック:
+         新しいタブに画像を開き、長押しで保存してもらう */
+      const url = URL.createObjectURL(blob);
+      window.open(url, "_blank");
+      alert("画像を新しいタブで開きました。画像を長押しして「写真に追加」を選んで保存してください。");
+    }
   }catch(e){
     alert("画像の作成に失敗しました。もう一度お試しください。");
   }finally{

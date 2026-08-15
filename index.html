@@ -3,6 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Android Chromeなどには、ページ側が明示しない限り勝手に画面を暗く反転させる
+     「自動ダークテーマ」機能がある。請求書は白い紙であることが絶対条件なので、
+     このサイトはライト固定であるとブラウザに宣言して、反転の対象から外す。 -->
+<meta name="color-scheme" content="light">
 <title>らくらく請求書 | 出演者のための請求書作成ツール</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -10,6 +14,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 :root{
+  /* metaタグと合わせて二重に宣言する。only を付けると、ブラウザ側の
+     ダークモード設定や強制ダーク機能があっても暗転させない。 */
+  color-scheme:only light;
   --ink:#17304A;        /* 藍 */
   --ink-soft:#3D5A7A;
   --paper:#F7F4EC;      /* 生成り */
@@ -457,6 +464,34 @@ footer.foot{
 }
 #invoiceSheet[data-theme="komorebi"]::before{top:12px;left:12px}
 #invoiceSheet[data-theme="komorebi"]::after{bottom:12px;right:12px;transform:rotate(180deg)}
+
+/* ---- 02 舞台裏の帯:紙は白のまま、左上にだけ藍のグラデーション帯を斜めに一本 ---- */
+#invoiceSheet[data-theme="butai"]{
+  --sheet-line:#1B2A4A;
+}
+#invoiceSheet[data-theme="butai"] .inv-title{color:#1B2A4A}
+#invoiceSheet[data-theme="butai"] .inv-amountbox{border-color:#1B2A4A}
+#invoiceSheet[data-theme="butai"] .inv-amountbox .val{color:#1B2A4A}
+#invoiceSheet[data-theme="butai"] table.inv-items th{background:#1B2A4A;color:#fff}
+/* 帯は回転ではなく、グラデーションの色の切り替え位置(ハードストップ)で
+   斜め帯を描く方式。角のマス(190x190)の中だけに収まるので本文とはぶつからない。
+   なお色停止は「1つの停止に1つの位置」という古い書き方で揃えている。
+   PNG保存に使うhtml2canvasは独自のCSS解釈を持っており、新しい
+   「#000 30% 39%」のような二重指定を読み落とす可能性があるため。 */
+#invoiceSheet[data-theme="butai"]::before{
+  top:0;left:0;width:190px;height:190px;
+  background:linear-gradient(135deg,
+    transparent 0%,
+    transparent 30%,
+    #1B2A4A 30%,
+    #1B2A4A 39%,
+    #2F4C82 39%,
+    #2F4C82 46%,
+    #5B7CB8 46%,
+    #5B7CB8 51%,
+    transparent 51%,
+    transparent 100%);
+}
 #invoiceSheet .inv-title{
   font-family:var(--font-title);
   font-size:30px;letter-spacing:.55em;text-indent:.55em;
@@ -540,6 +575,10 @@ footer.foot{
 @media print{
   @page{size:A4;margin:8mm 14mm}
   html,body{background:#fff!important}
+  /* Windowsのハイコントラストモードなど「強制カラー」環境では、OS側が
+     背景を黒・文字を白に置き換えてしまい、印刷結果が真っ黒になることがある。
+     請求書部分だけはOSの置き換え対象から外し、指定どおりの色で印刷する。 */
+  #invoiceSheet,#invoiceSheet *{forced-color-adjust:none!important}
   /* 既定では多くのブラウザが「インク節約」のため背景色を印刷時に消してしまう。
      見出し行や合計欄の背景色(グレー)もこれで消えるため、明示的に「そのまま印刷する」よう指定する。 */
   *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
@@ -562,7 +601,11 @@ footer.foot{
      min-heightなので、品目が多く実際の内容がこれより長ければ、
      そのまま自然に2枚目へ続く(切り取られることはない)。 */
   #invoiceSheet{width:100%;max-width:200mm;min-height:0;height:auto;
-                padding:0;margin:0}
+                padding:0;margin:0;
+                /* 万一テーマ変数が読めない環境でも紙が白・文字が黒になるよう
+                   フォールバック値を添えておく(黒紙になる事故の最後の砦) */
+                background-color:var(--sheet-bg,#fff)!important;
+                color:var(--sheet-text,#1a1a1a)!important}
   /* .inv-meta が top:0/right:0 に来るため、タイトルがそこと重ならないよう
      見出しの上に隙間を空ける(元のpadding:15mmに相当する分) */
   #invoiceSheet .inv-title{margin-top:18mm}
@@ -877,11 +920,12 @@ const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;"
    #invoiceSheet の data-theme だけを切り替える(html/bodyには触れない)。
    そのため画面の入力フォームの見た目は一切変わらず、プレビュー(=#invoiceSheet
    そのもの)と印刷・PDF・PNG保存にだけ反映される。
-   1つずつ確認しながら増やす方針のため、現時点ではオリジナルと木漏れ日の縁のみ。
+   1つずつ確認しながら増やす方針のため、現時点ではオリジナル・木漏れ日の縁・舞台裏の帯のみ。
    swA/swBはスウォッチ表示用の色(CSS側の #invoiceSheet[data-theme] の配色と合わせる)。 */
 const DESIGN_THEMES = [
   {id:"original", name:"オリジナル",   swA:"#1A1A1A", swB:"#EFEDE6"},
   {id:"komorebi", name:"木漏れ日の縁", swA:"#3E6B4F", swB:"#E3EFE0"},
+  {id:"butai",    name:"舞台裏の帯",   swA:"#1B2A4A", swB:"#FFFFFF"},
 ];
 const DESIGN_THEME_KEY = "misakikaku-invoice-print-theme";
 function applyDesignTheme(id){
@@ -1224,6 +1268,7 @@ function calc(){
 }
 
 function renderCalc(c){
+  const tateOnly = c.tate10 + c.tate8; // 実費の立替(デポジットは含めない)
   let html = "";
   if(c.taxMode==="incl"){
     html += `<div class="row"><span>小計(税込)</span><span class="num">${yen(c.total)}</span></div>`;
@@ -1235,12 +1280,21 @@ function renderCalc(c){
     html += `<div class="row"><span>小計${c.tate>0?"":"(税抜)"}</span><span class="num">${yen(c.rewEx + c.tate)}</span></div>`;
     html += `<div class="row"><span>消費税(10%)</span><span class="num">${yen(c.rewTax)}</span></div>`;
     if(c.tate>0)
-      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※立替分(${yen(c.tate10+c.tate8+c.t0)})は実費のため消費税を加算していません</span><span></span></div>`;
+      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※立替金・デポジット(${yen(c.tate)})は実費・預り金のため消費税を加算していません</span><span></span></div>`;
   } else {
     html += `<div class="row"><span>小計</span><span class="num">${yen(c.total)}</span></div>`;
   }
-  if(c.tate>0)
-    html += `<div class="row" style="color:var(--muted)"><span>(うち立替金 ※源泉対象外)</span><span class="num">${yen(c.tate)}</span></div>`;
+  if(tateOnly>0){
+    html += `<div class="row" style="color:var(--muted)"><span>(うち立替金 ※源泉対象外)</span><span class="num">${yen(tateOnly)}</span></div>`;
+    if(c.taxMode==="excl"){
+      if(c.tateTax10>0)
+        html += `<div class="row" style="color:var(--muted)"><span>(立替分の消費税10%)</span><span class="num">${yen(c.tateTax10)}</span></div>`;
+      if(c.tateTax8>0)
+        html += `<div class="row" style="color:var(--muted)"><span>(立替分の消費税8%)</span><span class="num">${yen(c.tateTax8)}</span></div>`;
+    }
+  }
+  if(c.t0>0)
+    html += `<div class="row" style="color:var(--muted)"><span>(うちデポジット返金 ※源泉対象外)</span><span class="num">${yen(c.t0)}</span></div>`;
   if(c.withhold)
     html += `<div class="row minus"><span>源泉徴収税額(${c.rewIn>1000000?"10.21%/20.42%":"10.21%"})</span><span class="num">△ ${yen(c.wh)}</span></div>`;
   html += `<div class="row total"><span>差引 ご請求金額</span><span class="num">${yen(c.due)}</span></div>`;
@@ -1254,6 +1308,16 @@ const fmtDate = v => {
   return `${y}年${Number(m)}月${Number(d)}日`;
 };
 
+/* 区分列の表示文字列。
+   消費税「記載しない」を選んでいるのに品目行だけ「10%」と印字されると、
+   消費税を書かない請求書に税率だけ載った矛盾書類になってしまう。
+   そのため「記載しない」のときは税率を外した表記にする。 */
+function clsSheetLabel(cls, taxMode){
+  const def = CLS[cls] || CLS.r10;
+  if(taxMode !== "none") return def.sheet;
+  return {r10:"", t10:"立替", t8:"立替", t0:"対象外"}[cls] ?? "";
+}
+
 function renderSheet(c){
   const fromLines = [];
   if($("fromAddr").value) fromLines.push(esc($("fromAddr").value));
@@ -1265,7 +1329,7 @@ function renderSheet(c){
     .filter(it => it.desc || it.price)
     .map(it => `<tr>
       <td>${esc(it.desc)||"　"}</td>
-      <td class="c">${CLS[it.cls] ? CLS[it.cls].sheet : "10%"}</td>
+      <td class="c">${clsSheetLabel(it.cls, c.taxMode)}</td>
       <td class="c">${it.qty!==""?esc(it.qty):""}</td>
       <td class="r">${it.price!==""?Number(it.price).toLocaleString("ja-JP"):""}</td>
       <td class="r">${lineAmount(it)!==null?lineAmount(it).toLocaleString("ja-JP"):""}</td>
@@ -1273,6 +1337,11 @@ function renderSheet(c){
 
   const emptyRows = Math.max(0, 4 - items.filter(it=>it.desc||it.price).length);
   const emptyHtml = Array(emptyRows).fill('<tr><td>　</td><td></td><td></td><td></td><td></td></tr>').join("");
+
+  /* 「立替(実費の肩代わり)」と「対象外(デポジット＝預り金の返金)」は
+     性質がまったく違うため、合計欄でも必ず分けて表示する。
+     まとめて「立替金」と書くと、受け取った側の経理処理が変わってしまう。 */
+  const tateOnly = c.tate10 + c.tate8;
 
   let totals = "";
   if(c.taxMode==="incl"){
@@ -1287,8 +1356,19 @@ function renderSheet(c){
   } else {
     totals += `<tr><td class="lbl">小計</td><td class="val">${yen(c.total)}</td></tr>`;
   }
-  if(c.tate>0)
-    totals += `<tr><td class="lbl">(うち立替金)</td><td class="val">${yen(c.tate)}</td></tr>`;
+  if(tateOnly>0){
+    totals += `<tr><td class="lbl">(うち立替金)</td><td class="val">${yen(tateOnly)}</td></tr>`;
+    /* 税抜モードのときは立替の内税がどこにも出ていないので、税率ごとに参考表示する。
+       (税込モードでは上の小計ブロックに含めて表示済み) */
+    if(c.taxMode==="excl"){
+      if(c.tateTax10>0)
+        totals += `<tr><td class="lbl">(立替分の消費税10%)</td><td class="val">${yen(c.tateTax10)}</td></tr>`;
+      if(c.tateTax8>0)
+        totals += `<tr><td class="lbl">(立替分の消費税8%)</td><td class="val">${yen(c.tateTax8)}</td></tr>`;
+    }
+  }
+  if(c.t0>0)
+    totals += `<tr><td class="lbl">(うちデポジット返金)</td><td class="val">${yen(c.t0)}</td></tr>`;
   if(c.withhold) totals += `<tr><td class="lbl">源泉徴収税額</td><td class="val">△ ${yen(c.wh)}</td></tr>`;
   totals += `<tr class="grand"><td class="lbl">差引ご請求金額</td><td class="val">${yen(c.due)}</td></tr>`;
 
@@ -1367,6 +1447,12 @@ function scaleSheet(){
   scaler.style.height = (($("invoiceSheet").offsetHeight) * scale) + "px";
 }
 window.addEventListener("resize", () => { scaleSheet(); });
+/* プレビュー枠は overflow:hidden で、高さを「実測値×縮小率」で決めている。
+   明朝体などのWebフォントが後から効くと行の高さが変わるため、読み込み前に
+   測ってしまうと下端が見切れる。フォント確定後にもう一度測り直す。 */
+if(document.fonts && document.fonts.ready){
+  document.fonts.ready.then(() => scaleSheet()).catch(() => {});
+}
 
 /* ---------- submission method (step 5) ---------- */
 /* 宛名は「ミサキカク 御中」以外にも「ミサキカク御中」「ミサキカク 平野様」など
@@ -1537,7 +1623,11 @@ document.querySelectorAll('input[name="taxMode"], #withholdChk').forEach(el=>{
 /* ---------- output ---------- */
 function buildFileBaseName(){
   const c = calc();
-  const dateStr = ($("issueDate").value || ymd(new Date())).replace(/-/g,"");
+  /* ファイル名の日付は「出演日」を使う。受け取る側(主催者)は公演ごとに
+     整理するので、発行日(作成した日)より出演日のほうが並べ替え・検索に役立つ。
+     出演日は「推奨」の任意項目なので、未入力のときだけ発行日で代用する。 */
+  const rawDate = $("perfDate").value || $("issueDate").value || ymd(new Date());
+  const dateStr = rawDate.replace(/-/g,"");
   const name = ($("fromName").value || "名前未入力").replace(/[\\/:*?"<>|]/g,"").trim() || "名前未入力";
   const amount = Math.round(c.due);
   return `${dateStr}_${name}_${amount}`;

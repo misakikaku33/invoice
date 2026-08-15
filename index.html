@@ -7,6 +7,11 @@
      「自動ダークテーマ」機能がある。請求書は白い紙であることが絶対条件なので、
      このサイトはライト固定であるとブラウザに宣言して、反転の対象から外す。 -->
 <meta name="color-scheme" content="light">
+<!-- ファビコン。単一HTMLファイルで完結させる原則を守るため、外部の画像ファイルを
+     置かずにSVGをデータURIとして埋め込む。GitHub Pages側に何も追加しなくてよい。
+     図柄:藍の角丸地に生成りの請求書、朱色の落款を1つ。 -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%2317304A%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%274.5%27%20width%3D%2716%27%20height%3D%2723%27%20rx%3D%272%27%20fill%3D%27%23F7F4EC%27%2F%3E%3Crect%20x%3D%2711%27%20y%3D%278.5%27%20width%3D%2710%27%20height%3D%272.2%27%20rx%3D%271.1%27%20fill%3D%27%2317304A%27%2F%3E%3Crect%20x%3D%2711%27%20y%3D%2713%27%20width%3D%2710%27%20height%3D%271.5%27%20rx%3D%27.75%27%20fill%3D%27%237C8A99%27%2F%3E%3Crect%20x%3D%2711%27%20y%3D%2716.4%27%20width%3D%277%27%20height%3D%271.5%27%20rx%3D%27.75%27%20fill%3D%27%237C8A99%27%2F%3E%3Ccircle%20cx%3D%2719.4%27%20cy%3D%2722.2%27%20r%3D%273.3%27%20fill%3D%27none%27%20stroke%3D%27%23C73E2E%27%20stroke-width%3D%271.5%27%2F%3E%3C%2Fsvg%3E">
+<meta name="theme-color" content="#17304A">
 <title>らくらく請求書 | 出演者のための請求書作成ツール</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1468,6 +1473,18 @@ function mailSubject(){
   const myName = $("fromName").value.trim();
   return `${myName || "[お名前]"}、請求書`;
 }
+/* 件名欄から「公演名」だけを取り出す。
+   件名は「「ミサキカク毎週公演」出演料の件」のように、公演名＋用件で
+   構成されている。メール本文の「公演名：」にこれをそのまま入れると
+   「公演名：「ミサキカク毎週公演」出演料の件」と用件まで混ざってしまうため、
+   かぎ括弧の中身を優先で拾い、無ければ末尾の「〜の件」を落とす。 */
+function perfTitle(){
+  const s = $("subject").value.trim();
+  if(!s) return "";
+  const m = s.match(/「([^」]+)」/);
+  if(m) return m[1].trim();
+  return s.replace(/\s*出演料の件$/, "").replace(/\s*の件$/, "").trim();
+}
 function mailBody(){
   const toName   = $("toName").value.trim();
   const myName   = $("fromName").value.trim();
@@ -1476,7 +1493,7 @@ function mailBody(){
     const d = parseYmd($("perfDate").value);
     return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`;
   })() : "";
-  const title    = $("subject").value.trim();
+  const title    = perfTitle();
   const c        = calc();
   const due      = $("dueDate").value ? (() => {
     const d = parseYmd($("dueDate").value);
@@ -1488,8 +1505,10 @@ function mailBody(){
   L.push(greetName, "");
   L.push(`お世話になっております。${myName || "[お名前]"}です。`);
   L.push(`${perfJp ? perfJp + "公演" : "下記公演"}の請求書をお送りいたします。`, "");
-  L.push(`出演日：${perfFull || "（未入力）"}`);
-  L.push(`公演名：${title || "（未入力）"}`);
+  /* 未入力の項目は「（未入力）」と書いて送るより、行ごと省いたほうが失礼にならない。
+     未入力であること自体は、STEP5の画面上で警告して気づいてもらう。 */
+  if(perfFull) L.push(`出演日：${perfFull}`);
+  if(title)    L.push(`公演名：${title}`);
   if(c.due > 0) L.push(`ご請求金額：${yen(c.due)}`);
   if(due)       L.push(`お支払期限：${due}`);
   L.push("", "請求書はPDFにて添付しております。", "ご確認のほど、よろしくお願いいたします。");
@@ -1544,11 +1563,21 @@ function setMailToast(msg){
   if(t) t.textContent = msg;
 }
 function mailActionsHtml(){
+  /* 本文からは未入力の行を省くため、抜けたまま送ってしまわないよう
+     ここで気づいてもらう。ミサキカク宛は出演日・公演名が必須。 */
+  const lack = [];
+  if(!$("perfDate").value) lack.push("出演日");
+  if(!perfTitle())         lack.push("公演名");
+  const lackHtml = lack.length ? `
+    <div class="sb-attach" style="border-color:var(--shu);color:var(--shu)">
+      <span>⚠️</span>
+      <span><b>${lack.join("と")}が未入力です。</b>このままだとメール本文に載りません。STEP二・三に戻って入力してください。</span>
+    </div>` : "";
   return `
     <div class="sb-attach">
       <span>📎</span>
       <span><b>先にPDFを保存してから</b>ボタンを押してください。メールの下書きは自動で作れますが、<b>PDFの添付だけは手作業</b>になります(メールの仕組み上、自動で添付できません)。</span>
-    </div>
+    </div>${lackHtml}
     <div class="sb-actions">
       <button type="button" class="sb-btn primary" data-mail="app">✉️ メールの下書きを作る</button>
       <button type="button" class="sb-btn sub" data-mail="gmail">Gmailで開く</button>
@@ -1699,6 +1728,12 @@ $("pngBtn").addEventListener("click", async () => {
      → 変更してから1フレーム待ってから印刷を呼ぶ。 */
 const originalTitle = document.title;
 let printTitleActive = false;
+/* iOS Safariかどうか。iPadOSはUAがMacを名乗るため、タッチ対応も併せて見る。 */
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent)
+  || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function restorePrintTitle(){
+  if(printTitleActive){ document.title = originalTitle; printTitleActive = false; }
+}
 $("printBtn").addEventListener("click", () => {
   document.title = buildFileBaseName();
   printTitleActive = true;
@@ -1706,9 +1741,19 @@ $("printBtn").addEventListener("click", () => {
      rAFで描画を1回はさんだ上にごく短いsetTimeoutも重ねて余裕を持たせる */
   requestAnimationFrame(() => setTimeout(() => window.print(), 60));
 });
-document.addEventListener("input", () => {
-  if(printTitleActive){ document.title = originalTitle; printTitleActive = false; }
-}, {capture:true});
+/* 復帰のきっかけを3つ用意する。1つだけだとタブ名がファイル名のまま残ってしまう。
+   ①afterprint:PC/Androidでは印刷ダイアログを閉じた後に発火するので安全。
+     ただしiOS Safariでは「保存」を押す前に発火してしまい、ファイル名が
+     元に戻ってしまうため、iOSでは使わない。
+   ②画面のタップ・クリック:印刷ダイアログやiOSの共有シートはブラウザ側の
+     オーバーレイなので、そこでの操作はページに届かない。つまりページが
+     タップされた時点で保存は完了しており、iOSでも安全に戻せる。
+   ③入力:従来からの保険。 */
+if(!IS_IOS){
+  window.addEventListener("afterprint", restorePrintTitle);
+}
+document.addEventListener("pointerdown", restorePrintTitle, {capture:true});
+document.addEventListener("input", restorePrintTitle, {capture:true});
 
 /* ---------- 発行者情報の端末保存(localStorage) ----------
    お名前・住所・連絡先・振込先など、公演ごとに変わらない情報だけを

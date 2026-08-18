@@ -41,9 +41,6 @@
   --sheet-text:#1a1a1a;       /* 請求書の本文文字色 */
   --sheet-bg:#FFFFFF;         /* 請求書の紙色(白) */
   --sheet-grain:rgba(0,0,0,0); /* オリジナルは質感なしの真っ白にするため無効化 */
-  /* 木漏れ日テーマの角飾り(蔓草)。単一HTMLファイルの原則を守るため、
-     外部画像ではなくCSS内にdata URIのSVGとして埋め込む(自作の線画)。 */
-  --komorebi-vine:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M4 4 Q40 14 32 42 Q54 36 48 64' stroke='%237FA688' stroke-width='3.2' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='42' r='4' fill='%237FA688'/%3E%3Ccircle cx='48' cy='64' r='4' fill='%23A9C6AE'/%3E%3Cpath d='M14 8 Q22 18 13 26' stroke='%23A9C6AE' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='13' cy='26' r='3' fill='%23C7DCC9'/%3E%3C/svg%3E");
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
@@ -76,6 +73,17 @@ header.top h1{
 header.top p.lead{
   margin-top:10px;font-size:13.5px;color:var(--ink-soft);
 }
+/* ブラウザ推奨の注意書き。目立ちすぎると本文より先に読まれてしまうので、
+   朱色は絵文字と枠線だけに留め、文字は通常の本文色に近づける。 */
+header.top p.browser-note{
+  display:inline-flex;gap:8px;align-items:flex-start;text-align:left;
+  margin:14px auto 0;padding:8px 14px;
+  border:1px solid var(--shu);border-radius:8px;
+  background:rgb(199 62 46 / .05);
+  font-size:12.5px;line-height:1.6;color:var(--ink);
+  max-width:520px;
+}
+header.top p.browser-note b{color:var(--shu)}
 
 /* ---------- design picker(印刷デザインの選択。STEP4内で使う) ---------- */
 .design-picker{margin:14px 0 18px}
@@ -450,34 +458,36 @@ footer.foot{
    既定(data-theme無し/"original")はこれまでどおりの見た目。 */
 #invoiceSheet::before,#invoiceSheet::after{content:"";position:absolute;pointer-events:none}
 
-/* ---- 01 木漏れ日の縁:セージグリーン×淡い若葉色の紙、角に手描き風の蔓草 ---- */
+/* ---- 01 木漏れ日の縁:セージグリーンの紙に、名前どおり二重線の「縁」を額装のように回す ---- */
 #invoiceSheet[data-theme="komorebi"]{
   --sheet-bg:#F5F8F1;--sheet-text:#2A2A2A;--sheet-line:#3E6B4F;
   --muted:#6B8A76;--sheet-muted-bg:#E3EFE0;--ink-soft:#3E6B4F;--line:#CFE0D3;
   --sheet-grain:rgba(62,107,79,.035);
-  /* 下端の蔓草(::after)が本文と重ならないよう、あらかじめ余白を確保しておく */
-  padding-bottom:104px;
+  /* border-style:double は「1本の線」ではなく、隙間を挟んだ二重線を
+     ブラウザが自動で描いてくれる指定。画像を使わずに、紙全体をぐるっと
+     縁取る「額装」の雰囲気を出せる。印刷・PDF・PNG保存すべてで安定して
+     同じ見た目になる(borderはCSSの中でも枯れた基本機能のため)。 */
+  border:7px double #3E6B4F;
 }
 #invoiceSheet[data-theme="komorebi"] .inv-title{color:#3E6B4F}
 #invoiceSheet[data-theme="komorebi"] .inv-amountbox{border-color:#3E6B4F}
 #invoiceSheet[data-theme="komorebi"] .inv-amountbox .val{color:#3E6B4F}
 #invoiceSheet[data-theme="komorebi"] table.inv-items th{color:#3E6B4F}
-#invoiceSheet[data-theme="komorebi"]::before,
-#invoiceSheet[data-theme="komorebi"]::after{
-  width:60px;height:60px;
-  background:var(--komorebi-vine) center/contain no-repeat;
-}
-#invoiceSheet[data-theme="komorebi"]::before{top:12px;left:12px}
-#invoiceSheet[data-theme="komorebi"]::after{bottom:12px;right:12px;transform:rotate(180deg)}
 
 /* ---- 02 舞台裏の帯:紙は白のまま、左上にだけ藍のグラデーション帯を斜めに一本 ---- */
 #invoiceSheet[data-theme="butai"]{
   --sheet-line:#1B2A4A;
+  /* 「内容」の見出し行も「小計」の見出しセルも、どちらもこの変数を使っている。
+     ここを変えるだけで両方が自動的に同じ見た目になる。
+     白抜き文字の濃紺は帯と競って重かったため、淡い藍の下地＋濃紺の文字に変更。 */
+  --sheet-muted-bg:#E6ECF5;
+  --muted:#A8B8CE;   /* 表の罫線。真っ黒だと硬いので藍寄りのグレーに */
 }
 #invoiceSheet[data-theme="butai"] .inv-title{color:#1B2A4A}
 #invoiceSheet[data-theme="butai"] .inv-amountbox{border-color:#1B2A4A}
 #invoiceSheet[data-theme="butai"] .inv-amountbox .val{color:#1B2A4A}
-#invoiceSheet[data-theme="butai"] table.inv-items th{background:#1B2A4A;color:#fff}
+#invoiceSheet[data-theme="butai"] table.inv-items th,
+#invoiceSheet[data-theme="butai"] table.inv-totals td.lbl{color:#1B2A4A}
 /* 帯は回転ではなく、グラデーションの色の切り替え位置(ハードストップ)で
    斜め帯を描く方式。角のマス(190x190)の中だけに収まるので本文とはぶつからない。
    なお色停止は「1つの停止に1つの位置」という古い書き方で揃えている。
@@ -496,6 +506,51 @@ footer.foot{
     #5B7CB8 51%,
     transparent 51%,
     transparent 100%);
+}
+/* 右下のミラー帯。左上と同じグラデーション定義のままだと、帯が同じ向きに
+   流れてしまい不自然に見える。180度回転させることで、左上から右下へ
+   ハの字に流れる、対になった帯として自然に見えるようにする。 */
+#invoiceSheet[data-theme="butai"]::after{
+  bottom:0;right:0;width:190px;height:190px;
+  transform:rotate(180deg);
+  background:linear-gradient(135deg,
+    transparent 0%,
+    transparent 30%,
+    #1B2A4A 30%,
+    #1B2A4A 39%,
+    #2F4C82 39%,
+    #2F4C82 46%,
+    #5B7CB8 46%,
+    #5B7CB8 51%,
+    transparent 51%,
+    transparent 100%);
+}
+
+/* ---- 03 緞帳ゴールドライン:上部にワインレッドの帯+金の一本線。舞台の緞帳を思わせる配色 ---- */
+#invoiceSheet[data-theme="donchou"]{
+  --sheet-line:#7A1F2B;--ink-soft:#7A1F2B;
+  --sheet-muted-bg:#F7ECD3;   /* 内容・小計の見出し行 */
+  --muted:#C4A874;            /* 表の罫線(金寄りのグレー) */
+}
+#invoiceSheet[data-theme="donchou"] .inv-title{color:#7A1F2B}
+#invoiceSheet[data-theme="donchou"] .inv-amountbox{
+  border-color:#C9A24B;background:#FBF3E4;
+}
+#invoiceSheet[data-theme="donchou"] .inv-amountbox .val{color:#7A1F2B}
+#invoiceSheet[data-theme="donchou"] table.inv-items th,
+#invoiceSheet[data-theme="donchou"] table.inv-totals td.lbl{color:#7A1F2B}
+/* 上部の帯(ワインレッドのグラデーション)+ その下の金の一本線。
+   left:0;right:0 で幅を指定しているので、#invoiceSheetの実際の幅が
+   画面(794px)・印刷(182mm相当)のどちらでも常に紙いっぱいに広がる。
+   タイトルは56pxのパディングの後に来るので、帯(16px)+金線(3px)の
+   19px は十分その手前に収まり、本文とは重ならない。 */
+#invoiceSheet[data-theme="donchou"]::before{
+  top:0;left:0;right:0;width:auto;height:16px;
+  background:linear-gradient(180deg,#7A1F2B,#5C141E);
+}
+#invoiceSheet[data-theme="donchou"]::after{
+  top:16px;left:0;right:0;width:auto;height:3px;
+  background:#C9A24B;
 }
 #invoiceSheet .inv-title{
   font-family:var(--font-title);
@@ -562,7 +617,7 @@ footer.foot{
   margin-top:30px;padding-top:16px;
   border-top:1px solid var(--line);
   text-align:center;white-space:pre-line;
-  font-family:var(--font-title);font-size:13px;
+  font-family:var(--font-title);font-size:15px;
   color:var(--ink-soft);letter-spacing:.08em;line-height:1.9;
 }
 
@@ -632,6 +687,7 @@ footer.foot{
   <div class="kicker">Invoice Guide for Performers</div>
   <h1>らくらく請求書</h1>
   <p class="lead">出演料の請求書を、解説つきで一歩ずつ作れるツールです。<br>入力するとページ下のプレビューにすぐ反映されます。</p>
+  <p class="browser-note"><span>🌐</span><span><b>Chrome</b>で開いてお使いください。ほかのブラウザではPDFの保存やレイアウトが崩れることがあります。</span></p>
 </header>
 
 <div class="rail" id="rail">
@@ -925,12 +981,13 @@ const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;"
    #invoiceSheet の data-theme だけを切り替える(html/bodyには触れない)。
    そのため画面の入力フォームの見た目は一切変わらず、プレビュー(=#invoiceSheet
    そのもの)と印刷・PDF・PNG保存にだけ反映される。
-   1つずつ確認しながら増やす方針のため、現時点ではオリジナル・木漏れ日の縁・舞台裏の帯のみ。
+   1つずつ確認しながら増やす方針のため、現時点ではオリジナル・木漏れ日の縁・舞台裏の帯・緞帳ゴールドラインのみ。
    swA/swBはスウォッチ表示用の色(CSS側の #invoiceSheet[data-theme] の配色と合わせる)。 */
 const DESIGN_THEMES = [
-  {id:"original", name:"オリジナル",   swA:"#1A1A1A", swB:"#EFEDE6"},
-  {id:"komorebi", name:"木漏れ日の縁", swA:"#3E6B4F", swB:"#E3EFE0"},
-  {id:"butai",    name:"舞台裏の帯",   swA:"#1B2A4A", swB:"#FFFFFF"},
+  {id:"original", name:"オリジナル",     swA:"#1A1A1A", swB:"#EFEDE6"},
+  {id:"komorebi", name:"木漏れ日の縁",   swA:"#3E6B4F", swB:"#E3EFE0"},
+  {id:"butai",    name:"舞台裏の帯",     swA:"#1B2A4A", swB:"#FFFFFF"},
+  {id:"donchou",  name:"緞帳ゴールドライン", swA:"#7A1F2B", swB:"#C9A24B"},
 ];
 const DESIGN_THEME_KEY = "misakikaku-invoice-print-theme";
 function applyDesignTheme(id){

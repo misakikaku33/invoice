@@ -40,7 +40,13 @@
   --sheet-line:#1a1a1a;       /* 請求書の罫線・タイトル下線 */
   --sheet-text:#1a1a1a;       /* 請求書の本文文字色 */
   --sheet-bg:#FFFFFF;         /* 請求書の紙色(白) */
-  --sheet-grain:rgba(0,0,0,0); /* オリジナルは質感なしの真っ白にするため無効化 */
+  /* オリジナルは質感なしの真っ白。
+     ここを rgba(0,0,0,0)=「透明な黒」にしていたことが、PDFで紙が真っ黒に
+     なる不具合の原因だった。PDFの内部形式はグラデーションに透明度を直接
+     持たせられず別途マスクが必要で、環境によってはそれが欠落して透明度が
+     失われ、「不透明な黒」に化けてしまう。
+     同じ事故が起きても白のままで済むよう「透明な白」を指定する。 */
+  --sheet-grain:rgba(255,255,255,0);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 
@@ -439,9 +445,17 @@ footer.foot{
    ========================================================= */
 #invoiceSheet{
   width:794px;min-height:1123px;
-  background-color:var(--sheet-bg);color:var(--sheet-text);
+  /* 変数が何らかの理由で読めない環境でも、紙が白・文字が濃色になるよう
+     フォールバック値を必ず添える(黒い紙になる事故の最後の砦)。 */
+  background-color:var(--sheet-bg,#fff);color:var(--sheet-text,#1a1a1a);
+  /* OSのハイコントラスト設定などの「強制カラー」環境では、背景を黒・文字を白に
+     機械的に置き換えられ、請求書が真っ黒になることがある。以前は印刷時だけ
+     除外していたが、同じ事故は画面表示でもPNG保存でも起きるため常時適用する。 */
+  forced-color-adjust:none;
   /* 紙の繊維のような質感。ごく薄い斜め線を重ねるだけで、写真素材なしで
-     「まっさらでない紙」の雰囲気を出す(参考にしたテンプレートの背景質感に近い考え方)。 */
+     「まっさらでない紙」の雰囲気を出す(参考にしたテンプレートの背景質感に近い考え方)。
+     なおPNG保存に使うhtml2canvasは repeating-linear-gradient に未対応で、
+     この質感は静かに無視される(エラーにはならない)。 */
   background-image:
     repeating-linear-gradient(115deg, var(--sheet-grain) 0px, var(--sheet-grain) 1px, transparent 1px, transparent 3px),
     repeating-linear-gradient(25deg, var(--sheet-grain) 0px, var(--sheet-grain) 1px, transparent 1px, transparent 4px);
@@ -450,6 +464,7 @@ footer.foot{
   font-size:13px;line-height:1.6;
   position:relative;z-index:0;
 }
+#invoiceSheet *{forced-color-adjust:none}
 /* ---------- 印刷デザインテーマ ----------
    #invoiceSheet[data-theme="◯◯"] というスコープだけで色やフォントを上書きする。
    html/bodyには一切さわらないので、入力フォームなど画面側の見た目には影響しない
@@ -489,12 +504,13 @@ footer.foot{
 #invoiceSheet[data-theme="butai"] table.inv-items th,
 #invoiceSheet[data-theme="butai"] table.inv-totals td.lbl{color:#1B2A4A}
 /* 帯は回転ではなく、グラデーションの色の切り替え位置(ハードストップ)で
-   斜め帯を描く方式。角のマス(190x190)の中だけに収まるので本文とはぶつからない。
+   斜め帯を描く方式。角のマス(140x140)の中だけに収まる。190pxだと画面でも印刷でも
+   宛名に帯がかかってしまうため、計算のうえ140pxまで縮めている。
    なお色停止は「1つの停止に1つの位置」という古い書き方で揃えている。
    PNG保存に使うhtml2canvasは独自のCSS解釈を持っており、新しい
    「#000 30% 39%」のような二重指定を読み落とす可能性があるため。 */
 #invoiceSheet[data-theme="butai"]::before{
-  top:0;left:0;width:190px;height:190px;
+  top:0;left:0;width:140px;height:140px;
   background:linear-gradient(135deg,
     transparent 0%,
     transparent 30%,
@@ -511,7 +527,7 @@ footer.foot{
    流れてしまい不自然に見える。180度回転させることで、左上から右下へ
    ハの字に流れる、対になった帯として自然に見えるようにする。 */
 #invoiceSheet[data-theme="butai"]::after{
-  bottom:0;right:0;width:190px;height:190px;
+  bottom:0;right:0;width:140px;height:140px;
   transform:rotate(180deg);
   background:linear-gradient(135deg,
     transparent 0%,
@@ -633,8 +649,17 @@ footer.foot{
    できてしまう。そのため @page 側に本物の余白を持たせ、シート側は
    実際に印刷できる範囲より十分小さい高さ(安全マージン付き)にしている。 */
 @media print{
-  @page{size:A4;margin:8mm 14mm}
+  /* シート自身が40px(10.6mm)の余白を持つようになったため、@page 側は
+     その分減らす。合計の紙端からの余白は 4+10.6 = 約14.6mm で従来と同等。 */
+  @page{size:A4;margin:5mm 4mm}
   html,body{background:#fff!important}
+  /* 紙の質感(repeating-linear-gradient)は印刷時には切る。
+     完全に透明なので見た目には何も失われないが、これは請求書の背景に
+     乗っている唯一の「特殊な描画」で、環境によってはこれが黒く潰れて
+     紙全体を覆う可能性が消せない。印刷・PDFでは確実さを優先する。
+     ※テーマの帯や枠線は ::before/::after や border で描いているため、
+       この指定では消えない。 */
+  #invoiceSheet{background-image:none!important}
   /* Windowsのハイコントラストモードなど「強制カラー」環境では、OS側が
      背景を黒・文字を白に置き換えてしまい、印刷結果が真っ黒になることがある。
      請求書部分だけはOSの置き換え対象から外し、指定どおりの色で印刷する。 */
@@ -656,21 +681,26 @@ footer.foot{
                 border-radius:0!important;overflow:visible!important}
   .sheet-scaler{transform:none!important;width:auto!important;height:auto!important}
   #printArea{position:static!important}
-  /* 200mm は @page の余白(15mm/16mm)を引いた実寸より一回り小さい安全値。
-     ブラウザ側で余白が数mm増えても2枚目に溢れない。
-     min-heightなので、品目が多く実際の内容がこれより長ければ、
-     そのまま自然に2枚目へ続く(切り取られることはない)。 */
-  #invoiceSheet{width:100%;max-width:200mm;min-height:0;height:auto;
-                padding:0;margin:0;
+  /* 以前はここで padding:0 / min-height:0 にして、紙の余白は @page 側だけで
+     作っていた。しかしそれだと「画面では余白だった場所に、印刷では本文が来る」
+     状態になり、余白に置いた装飾(帯・枠線・発行日)が本文と重なってしまう。
+     そこで印刷でもシート自身に余白と最低の高さを持たせ、@page の余白を
+     その分減らして相殺する。画面と印刷でレイアウトがほぼ一致するので、
+     装飾の位置を一度考えれば両方で成立する。
+
+     ・本文幅  = 202mm - 10.6mm×2 = 180.8mm(従来182.0mmとほぼ同じ)
+     ・最低高  = 270mm。印刷可能高287mmに収まるので1枚に収まり、かつ
+                下端の装飾を置くための余白が紙の底まで確保される。
+                min-heightなので品目が多ければ自然に2枚目へ続く。 */
+  #invoiceSheet{width:100%;max-width:202mm;min-height:270mm;height:auto;
+                padding:40px;margin:0;
                 /* 万一テーマ変数が読めない環境でも紙が白・文字が黒になるよう
                    フォールバック値を添えておく(黒紙になる事故の最後の砦) */
                 background-color:var(--sheet-bg,#fff)!important;
                 color:var(--sheet-text,#1a1a1a)!important}
-  /* .inv-meta が top:0/right:0 に来るため、タイトルがそこと重ならないよう
-     見出しの上に隙間を空ける(元のpadding:15mmに相当する分) */
-  #invoiceSheet .inv-title{margin-top:18mm}
-  /* 発行日ブロックは #invoiceSheet の左上基準(0,0)に統一(@page側で余白済み) */
-  #invoiceSheet .inv-meta{top:0!important;right:0!important}
+  /* 発行日ブロックはシートの余白の内側へ(画面と同じ考え方)。
+     これで緞帳テーマの上部の帯とも重ならない。 */
+  #invoiceSheet .inv-meta{top:40px!important;right:40px!important}
   /* 品目表が2ページにまたがるときの体裁 */
   #invoiceSheet table.inv-items tr{page-break-inside:avoid}
   #invoiceSheet table.inv-totals{page-break-inside:avoid}
@@ -1730,7 +1760,12 @@ $("pngBtn").addEventListener("click", async () => {
   scaler.style.height = "auto";
   try{
     const canvas = await html2canvas($("invoiceSheet"), {
-      scale:2, backgroundColor:"#ffffff", useCORS:true,
+      /* backgroundColor はキャンバスの下地。テーマで紙色が変わるため、
+         実際に適用されている紙色を読み取って渡す(読めなければ白)。
+         これで、万一シート自身の背景描画が抜けても黒くはならない。 */
+      scale:2,
+      backgroundColor:(getComputedStyle($("invoiceSheet")).backgroundColor || "#ffffff"),
+      useCORS:true,
       width:794, windowWidth:794,
       scrollX:0, scrollY:-window.scrollY
     });

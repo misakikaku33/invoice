@@ -949,11 +949,9 @@ footer.foot{
   </div>
 
   <details class="guide">
-    <summary>立替精算・デポジットの書き方</summary>
-    <p>公演のために<b>あなたが自腹で払った実費</b>(小道具代、衣装材料、印刷代など)を、出演料と一緒に返してもらう仕組みです。行を追加して、区分を「立替」にして<b>レシートどおりの税込金額</b>を入力してください。</p>
-    <p><b>税率はレシートに合わせます</b>:ほとんどの買い物は10%、スーパーやコンビニの飲食料品(持ち帰り)は8%です。レシートに「8%」「※」と書いてあれば8%を選びます。</p>
-    <p>立替金はあなたの報酬ではなく<b>実費の返金</b>なので、消費税の上乗せも源泉徴収もかかりません(このツールが自動で除外します)。<b>レシートは必ず保管</b>して、求められたらコピーを渡せるようにしておきましょう。</p>
-    <p><b>デポジット(保証金・預かり金)の返金</b>を請求する場合は、区分を「対象外(デポジット)」にしてください。これは物やサービスの対価ではなく<b>預けていたお金がそのまま返ってくるだけ</b>のものなので、消費税もかからず、源泉徴収の対象にもなりません。</p>
+    <summary>デポジットの返金がある場合</summary>
+    <p><b>デポジット(保証金・預かり金)の返金</b>を請求する場合は、区分を「デポジット返金」にしてください。これは物やサービスの対価ではなく<b>預けていたお金がそのまま返ってくるだけ</b>のものなので、消費税もかからず、源泉徴収の対象にもなりません。</p>
+    <p>なお、公演のために自腹で払った実費(小道具代・衣装材料代など)の立替精算は、<b>このツールでは扱っていません</b>。稽古場などで直接ご相談ください。</p>
   </details>
 
   <div class="field">
@@ -973,14 +971,14 @@ footer.foot{
 
   <div class="field">
     <label class="checkline"><input type="checkbox" id="withholdChk" checked>源泉徴収(10.21%)を差し引いて請求する</label>
-    <div class="hint">源泉徴収の要否は、報酬の内容と支払者との取り決めを確認してから選んでください。チェック時は、報酬(出演料など)の<b>税込総額×10.21%</b>で計算します。区分が「立替」「対象外」の品目は源泉の対象になりません。</div>
+    <div class="hint">源泉徴収の要否は、報酬の内容と支払者との取り決めを確認してから選んでください。チェック時は、報酬(出演料など)の<b>税込総額×10.21%</b>で計算します。区分が「デポジット返金」の品目は源泉の対象になりません。</div>
   </div>
 
   <details class="guide">
     <summary>源泉徴収ってなに?損してない?</summary>
     <p>あなたの<b>所得税の前払い</b>です。支払側(主催者)が出演料から10.21%を差し引いて、あなたの代わりに国へ納めます。</p>
     <p>損ではありません。<b>確定申告をすると精算され、払いすぎていれば還付(返金)されます</b>。むしろ「支払調書+確定申告」はフリーランスの基本セットです。</p>
-    <p>※立替金は報酬ではないので源泉の対象外です。※報酬が100万円を超える部分は税率が20.42%になります(このツールは自動で対応します)。</p>
+    <p>※デポジット返金は報酬ではないので源泉の対象外です。※報酬が100万円を超える部分は税率が20.42%になります(このツールは自動で対応します)。</p>
   </details>
 
   <div class="field">
@@ -1123,11 +1121,15 @@ try{ savedDesignTheme = localStorage.getItem(DESIGN_THEME_KEY) || "original"; }c
 applyDesignTheme(savedDesignTheme);
 
 /* ---------- state ---------- */
+/* 区分は「報酬」と「デポジット返金」の2つだけにしている。
+   以前は立替(実費の肩代わり)も選べたが、実際の利用は年2〜3回程度で、
+   稽古場でその場でレシートを受け取り現金精算することが多いと分かったため、
+   このツールから外した(税率判定・レシート保管・内税計算など、初心者には
+   負担の大きい概念がここに集中していた)。立替が生じた場合は、このツールを
+   使わず個別にやりとりしてもらう運用に統一する。 */
 const CLS = {
   r10:{label:"出演料・報酬(10%)", sheet:"10%"},
-  t10:{label:"立替(10%)", sheet:"立替 10%"},
-  t8:{label:"立替(8%)", sheet:"立替 8%"},
-  t0:{label:"対象外(デポジット)", sheet:"対象外"}
+  t0:{label:"デポジット返金", sheet:"対象外"}
 };
 /* tpl:プリセット由来の雛形文字列(「◯月◯日」を含む)。
    出演日を変更するたびに desc を tpl から作り直すので、日付を直しても追従する。
@@ -1295,7 +1297,7 @@ function renderItems(){
       `<option value="${k}" ${it.cls===k?"selected":""}>${CLS[k].label}</option>`).join("");
     card.innerHTML = `
       <div class="ic-top">
-        <input type="text" data-i="${i}" data-k="desc" value="${esc(it.desc)}" placeholder="出演料(◯月◯日 公演名) / 立替:小道具代 など">
+        <input type="text" data-i="${i}" data-k="desc" value="${esc(it.desc)}" placeholder="出演料(◯月◯日 公演名) など">
         ${items.length>1 ? `<button type="button" class="del" data-del="${i}" aria-label="行を削除">×</button>` : ""}
       </div>
       <div class="ic-bottom">
@@ -1397,12 +1399,10 @@ function calc(){
   const withhold = $("withholdChk").checked;
 
   // 区分ごとの合計
-  let rewardRaw = 0, tate10 = 0, tate8 = 0, t0 = 0;
+  let rewardRaw = 0, t0 = 0;
   items.forEach(it => {
     const a = lineAmount(it) || 0;
-    if(it.cls==="t10") tate10 += a;
-    else if(it.cls==="t8") tate8 += a;
-    else if(it.cls==="t0") t0 += a;
+    if(it.cls==="t0") t0 += a;
     else rewardRaw += a;
   });
 
@@ -1414,16 +1414,13 @@ function calc(){
   else if(taxMode==="incl"){ rewIn = rewardRaw; rewTax = floorTax(rewIn*10/110 + (rewIn >= 0 ? 1e-9 : -1e-9)); rewEx = rewIn - rewTax; }
   else { rewEx = rewardRaw; rewTax = 0; rewIn = rewardRaw; }
 
-  // 立替・デポジットは発行者自身の課税売上ではないため、消費税額は請求書の税額に含めない。
-  // ただし立替の中にいくら消費税が含まれるかは、受け取る側が経費処理する際に
-  // 必要になるため、税額とは別枠の「参考値」として算出だけしておく。
-  const tateTax10 = floorTax(tate10*10/110 + (tate10 >= 0 ? 1e-9 : -1e-9));
-  const tateTax8  = floorTax(tate8*8/108  + (tate8  >= 0 ? 1e-9 : -1e-9));
-  const tate = tate10 + tate8 + t0;
+  // デポジットは預り金の返金であって発行者自身の課税売上ではないため、
+  // 消費税額は請求書の税額に含めない。
+  const tate = t0;
 
   const total = rewIn + tate; // 源泉差引前の請求総額
 
-  // 源泉徴収:報酬の税込額×10.21%(100万円超は超過分20.42%)。立替・対象外は除外。
+  // 源泉徴収:報酬の税込額×10.21%(100万円超は超過分20.42%)。デポジットは除外。
   let wh = 0;
   if(withhold){
     const base = rewIn;
@@ -1433,11 +1430,10 @@ function calc(){
   }
   const due = total - wh;
   const raw = rewardRaw + tate;
-  return {taxMode, raw, rewardRaw, rewEx, rewTax, rewIn, tate10, tate8, t0, tate, tateTax10, tateTax8, total, wh, due, withhold};
+  return {taxMode, raw, rewardRaw, rewEx, rewTax, rewIn, t0, tate, total, wh, due, withhold};
 }
 
 function renderCalc(c){
-  const tateOnly = c.tate10 + c.tate8; // 実費の立替(デポジットは含めない)
   let html = "";
   if(c.taxMode==="incl"){
     html += `<div class="row"><span>小計(税込)</span><span class="num">${yen(c.total)}</span></div>`;
@@ -1451,19 +1447,9 @@ function renderCalc(c){
       html += `<div class="row" style="color:var(--muted)"><span>(10%対象の税抜対価)</span><span class="num">${yen(c.rewEx)}</span></div>`;
     html += `<div class="row"><span>消費税(10%)</span><span class="num">${yen(c.rewTax)}</span></div>`;
     if(c.tate!==0)
-      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※立替金・デポジット(${yen(c.tate)})は実費・預り金のため消費税を加算していません</span><span></span></div>`;
+      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※デポジット(${yen(c.tate)})は預り金のため消費税を加算していません</span><span></span></div>`;
   } else {
     html += `<div class="row"><span>小計</span><span class="num">${yen(c.total)}</span></div>`;
-  }
-  if(tateOnly!==0){
-    html += `<div class="row" style="color:var(--muted)"><span>(うち立替金 ※源泉対象外)</span><span class="num">${yen(tateOnly)}</span></div>`;
-    /* 立替に含まれる消費税は、上の「消費税10%」(発行者の課税売上分)とは
-       性質が違うため税額には合算しない。ただし受け取る側の経費処理に
-       必要なので、税率ごとに参考値として並べる。 */
-    if(c.tateTax10!==0)
-      html += `<div class="row" style="color:var(--muted)"><span>(参考:立替分の消費税10%)</span><span class="num">${yen(c.tateTax10)}</span></div>`;
-    if(c.tateTax8!==0)
-      html += `<div class="row" style="color:var(--muted)"><span>(参考:立替分の消費税8%)</span><span class="num">${yen(c.tateTax8)}</span></div>`;
   }
   if(c.t0!==0)
     html += `<div class="row" style="color:var(--muted)"><span>(うちデポジット返金 ※源泉対象外)</span><span class="num">${yen(c.t0)}</span></div>`;
@@ -1487,7 +1473,7 @@ const fmtDate = v => {
 function clsSheetLabel(cls, taxMode){
   const def = CLS[cls] || CLS.r10;
   if(taxMode !== "none") return def.sheet;
-  return {r10:"", t10:"立替", t8:"立替", t0:"対象外"}[cls] ?? "";
+  return {r10:"", t0:"対象外"}[cls] ?? "";
 }
 
 function renderSheet(c){
@@ -1510,11 +1496,6 @@ function renderSheet(c){
   const emptyRows = Math.max(0, 4 - items.filter(it=>it.desc||it.price).length);
   const emptyHtml = Array(emptyRows).fill('<tr><td>　</td><td></td><td></td><td></td><td></td></tr>').join("");
 
-  /* 「立替(実費の肩代わり)」と「対象外(デポジット＝預り金の返金)」は
-     性質がまったく違うため、合計欄でも必ず分けて表示する。
-     まとめて「立替金」と書くと、受け取った側の経理処理が変わってしまう。 */
-  const tateOnly = c.tate10 + c.tate8;
-
   let totals = "";
   if(c.taxMode==="incl"){
     totals += `<tr><td class="lbl">小計(税込)</td><td class="val">${yen(c.total)}</td></tr>`;
@@ -1529,15 +1510,6 @@ function renderSheet(c){
     totals += `<tr><td class="lbl">消費税(10%)</td><td class="val">${yen(c.rewTax)}</td></tr>`;
   } else {
     totals += `<tr><td class="lbl">小計</td><td class="val">${yen(c.total)}</td></tr>`;
-  }
-  if(tateOnly!==0){
-    totals += `<tr><td class="lbl">(うち立替金)</td><td class="val">${yen(tateOnly)}</td></tr>`;
-    /* 立替の内税は発行者の課税売上ではないので税額には含めない。
-       「参考」と明記したうえで、税率ごとに内訳を示す。 */
-    if(c.tateTax10!==0)
-      totals += `<tr><td class="lbl">(参考:立替分の消費税10%)</td><td class="val">${yen(c.tateTax10)}</td></tr>`;
-    if(c.tateTax8!==0)
-      totals += `<tr><td class="lbl">(参考:立替分の消費税8%)</td><td class="val">${yen(c.tateTax8)}</td></tr>`;
   }
   if(c.t0!==0)
     totals += `<tr><td class="lbl">(うちデポジット返金)</td><td class="val">${yen(c.t0)}</td></tr>`;

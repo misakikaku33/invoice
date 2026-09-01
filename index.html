@@ -12,11 +12,10 @@
      図柄:藍の角丸地に生成りの請求書、朱色の落款を1つ。 -->
 <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2032%2032%27%3E%3Crect%20width%3D%2732%27%20height%3D%2732%27%20rx%3D%277%27%20fill%3D%27%2317304A%27%2F%3E%3Crect%20x%3D%278%27%20y%3D%274.5%27%20width%3D%2716%27%20height%3D%2723%27%20rx%3D%272%27%20fill%3D%27%23F7F4EC%27%2F%3E%3Crect%20x%3D%2711%27%20y%3D%278.5%27%20width%3D%2710%27%20height%3D%272.2%27%20rx%3D%271.1%27%20fill%3D%27%2317304A%27%2F%3E%3Crect%20x%3D%2711%27%20y%3D%2713%27%20width%3D%2710%27%20height%3D%271.5%27%20rx%3D%27.75%27%20fill%3D%27%237C8A99%27%2F%3E%3Crect%20x%3D%2711%27%20y%3D%2716.4%27%20width%3D%277%27%20height%3D%271.5%27%20rx%3D%27.75%27%20fill%3D%27%237C8A99%27%2F%3E%3Ccircle%20cx%3D%2719.4%27%20cy%3D%2722.2%27%20r%3D%273.3%27%20fill%3D%27none%27%20stroke%3D%27%23C73E2E%27%20stroke-width%3D%271.5%27%2F%3E%3C%2Fsvg%3E">
 <meta name="theme-color" content="#17304A">
-<title>らくらく請求書 | 出演者のための請求書作成ツール</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600;700&family=Noto+Sans+JP:wght@400;500;700&family=Zen+Old+Mincho:wght@500;600;700&family=Noto+Serif+JP:wght@400;500;700&family=Kaisei+Decol:wght@500;700&family=M+PLUS+Rounded+1c:wght@400;500;700&family=Shippori+Mincho+B1:wght@500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<title>らくらく請求書 | 出演者のための請求書作成ツール</title>
 <style>
 :root{
   /* metaタグと合わせて二重に宣言する。only を付けると、ブラウザ側の
@@ -34,8 +33,10 @@
   --ok:#3E7A52;
   --radius:14px;
   /* ---- テーマで差し替える変数(既定=藍テーマ) ---- */
-  --font-title:'Shippori Mincho',serif;
-  --font-body:'Noto Sans JP',sans-serif;
+  /* デザインテーマの見た目を端末によらず一定に保つため、Webフォントを先頭に置く。
+     読み込めなかったときのみOS標準の明朝/ゴシックに落ちる。 */
+  --font-title:'Shippori Mincho','Yu Mincho','Hiragino Mincho ProN',serif;
+  --font-body:'Noto Sans JP','Yu Gothic',Meiryo,sans-serif;
   --sheet-muted-bg:#EFEDE6;   /* 請求書の見出し行・合計欄などの背景(ベージュ系のまま) */
   --sheet-line:#1a1a1a;       /* 請求書の罫線・タイトル下線 */
   --sheet-text:#1a1a1a;       /* 請求書の本文文字色 */
@@ -332,6 +333,34 @@ details.guide p b{color:var(--shu)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .save-note{font-size:12px;color:var(--muted);margin-top:10px;text-align:center}
 
+/* PDF保存時に一度だけ必要なブラウザ側の設定。
+   CSSで@page{margin:0}を指定しても、印刷ダイアログの余白設定が
+   「デフォルト」のままだとブラウザ側が優先されて余白が付いてしまう。
+   ツール側では変えられない部分なので、手順として明示する。
+   ヘッダーの朱色の注意書きと competing しないよう、藍系の落ち着いた配色にする。 */
+.print-setting{
+  margin-top:14px;padding:13px 16px;
+  border:1px solid var(--line);border-left:3px solid var(--ink);
+  border-radius:8px;background:#fff;
+  text-align:left;
+}
+.print-setting .ps-head{
+  font-size:13px;font-weight:700;color:var(--ink);margin-bottom:6px;
+}
+.print-setting .ps-lead{font-size:12.5px;color:var(--sumi);line-height:1.7}
+.print-setting .ps-list{
+  list-style:none;margin:9px 0;padding:0;
+  display:flex;flex-wrap:wrap;gap:8px;
+}
+.print-setting .ps-list li{
+  flex:1 1 200px;
+  background:var(--paper);border:1px solid var(--line);border-radius:6px;
+  padding:8px 11px;font-size:12.5px;color:var(--ink);line-height:1.6;
+}
+.print-setting .ps-list b{display:block;font-size:11.5px;color:var(--muted);font-weight:700}
+.print-setting .ps-list .ps-val{font-weight:700;color:var(--shu)}
+.print-setting .ps-note{font-size:11.5px;color:var(--muted);line-height:1.7;margin-top:2px}
+
 /* warn */
 .warnbox{
   display:none;background:#FFF6E5;border:1px solid #EAD9AE;
@@ -455,10 +484,17 @@ footer.foot{
   /* 紙の繊維のような質感。ごく薄い斜め線を重ねるだけで、写真素材なしで
      「まっさらでない紙」の雰囲気を出す(参考にしたテンプレートの背景質感に近い考え方)。
      なおPNG保存に使うhtml2canvasは repeating-linear-gradient に未対応で、
-     この質感は静かに無視される(エラーにはならない)。 */
+     この質感は静かに無視される(エラーにはならない)。
+
+     透明部分に "transparent" を使わないのは --sheet-grain と同じ理由。
+     transparent の実体は rgba(0,0,0,0)=「透明な黒」で、透明度だけが
+     失われる環境では黒い縞になって紙を覆ってしまう。中身を白にしておけば、
+     同じ事故が起きても紙色に紛れて実害が出ない。
+     印刷・PDFではこの背景自体を切っている(下の@media print参照)ので、
+     ここで守っているのは画面表示とPNG保存の2つ。 */
   background-image:
-    repeating-linear-gradient(115deg, var(--sheet-grain) 0px, var(--sheet-grain) 1px, transparent 1px, transparent 3px),
-    repeating-linear-gradient(25deg, var(--sheet-grain) 0px, var(--sheet-grain) 1px, transparent 1px, transparent 4px);
+    repeating-linear-gradient(115deg, var(--sheet-grain) 0px, var(--sheet-grain) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 3px),
+    repeating-linear-gradient(25deg, var(--sheet-grain) 0px, var(--sheet-grain) 1px, rgba(255,255,255,0) 1px, rgba(255,255,255,0) 4px);
   padding:56px 60px;
   font-family:var(--font-body);
   font-size:13px;line-height:1.6;
@@ -508,20 +544,26 @@ footer.foot{
    宛名に帯がかかってしまうため、計算のうえ140pxまで縮めている。
    なお色停止は「1つの停止に1つの位置」という古い書き方で揃えている。
    PNG保存に使うhtml2canvasは独自のCSS解釈を持っており、新しい
-   「#000 30% 39%」のような二重指定を読み落とす可能性があるため。 */
+   「#000 30% 39%」のような二重指定を読み落とす可能性があるため。
+   また透明部分は"transparent"(=rgba(0,0,0,0)、中身は黒)ではなく
+   rgba(255,255,255,0)(中身は白)を使う。理由は21行目付近の
+   --sheet-grain と同じで、PDF化の際に透明度だけが失われる環境があり、
+   そのとき中身の色がそのまま出てしまう。中身を黒にしておくと紙が
+   黒く欠けたようになるため、紙色(白)に合わせておけば万一透明度が
+   飛んでも見た目にはほぼ影響しない。 */
 #invoiceSheet[data-theme="butai"]::before{
   top:0;left:0;width:140px;height:140px;
   background:linear-gradient(135deg,
-    transparent 0%,
-    transparent 30%,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 30%,
     #1B2A4A 30%,
     #1B2A4A 39%,
     #2F4C82 39%,
     #2F4C82 46%,
     #5B7CB8 46%,
     #5B7CB8 51%,
-    transparent 51%,
-    transparent 100%);
+    rgba(255,255,255,0) 51%,
+    rgba(255,255,255,0) 100%);
 }
 /* 右下のミラー帯。左上と同じグラデーション定義のままだと、帯が同じ向きに
    流れてしまい不自然に見える。180度回転させることで、左上から右下へ
@@ -530,16 +572,16 @@ footer.foot{
   bottom:0;right:0;width:140px;height:140px;
   transform:rotate(180deg);
   background:linear-gradient(135deg,
-    transparent 0%,
-    transparent 30%,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0) 30%,
     #1B2A4A 30%,
     #1B2A4A 39%,
     #2F4C82 39%,
     #2F4C82 46%,
     #5B7CB8 46%,
     #5B7CB8 51%,
-    transparent 51%,
-    transparent 100%);
+    rgba(255,255,255,0) 51%,
+    rgba(255,255,255,0) 100%);
 }
 
 /* ---- 03 緞帳ゴールドライン:上部にワインレッドの帯+金の一本線。舞台の緞帳を思わせる配色 ---- */
@@ -576,7 +618,8 @@ footer.foot{
   padding-bottom:8px;margin-bottom:22px;
 }
 #invoiceSheet .inv-meta{
-  position:absolute;top:56px;right:60px;
+  /* 発行日・請求書番号・支払期限の3行になっても、タイトル下線と重ならない位置。 */
+  position:absolute;top:36px;right:60px;
   font-size:12px;text-align:right;line-height:1.8;
 }
 #invoiceSheet .inv-cols{display:flex;justify-content:space-between;gap:30px;margin-bottom:20px;align-items:flex-start}
@@ -614,7 +657,8 @@ footer.foot{
 #invoiceSheet table.inv-items td.r{text-align:right;font-variant-numeric:tabular-nums}
 #invoiceSheet table.inv-items td.c{text-align:center}
 #invoiceSheet table.inv-totals{
-  width:50%;table-layout:fixed;border-collapse:collapse;margin-left:auto;margin-top:-1px;
+  /* 品目表の「内容」50%＋「区分」11%に合わせ、左端を「区分」と「数量」の境界へ置く。 */
+  width:39%;table-layout:fixed;border-collapse:collapse;margin-left:auto;margin-top:-1px;
 }
 #invoiceSheet table.inv-totals td{
   border:1px solid var(--muted);padding:5px 10px;font-size:12.5px;
@@ -625,6 +669,16 @@ footer.foot{
 #invoiceSheet .inv-bank{
   margin-top:20px;border:1px solid var(--muted);
   padding:12px 16px;font-size:12.5px;width:fit-content;min-width:340px;
+}
+#invoiceSheet .inv-summary-area{
+  /* 右:合計欄(39%)、左:振込先(61%)。品目表の列境界と正確にそろえる。 */
+  display:grid;grid-template-columns:61% 39%;align-items:stretch;margin-top:-1px;
+}
+#invoiceSheet .inv-summary-area table.inv-totals{
+  grid-column:2;grid-row:1;width:100%;margin:0;
+}
+#invoiceSheet .inv-summary-area .inv-bank{
+  grid-column:1;grid-row:1;align-self:center;margin:0;
 }
 #invoiceSheet .inv-bank .bank-title{font-weight:700;font-size:12px;margin-bottom:4px;letter-spacing:.1em}
 #invoiceSheet .inv-notes{margin-top:16px;font-size:12px;color:var(--muted);white-space:pre-line}
@@ -644,14 +698,15 @@ footer.foot{
 
    もう1つ注意:@page{margin:0} を指定しても、実際のブラウザ(特にSafari/iOS、
    Chromeのヘッダー・フッター表示時)は本当のゼロ余白では印刷しないことが多い。
-   #invoiceSheetを「A4いっぱい(210mm×296mm)」ちょうどに作ってしまうと、
-   ブラウザ側が数mmでも余白を足した瞬間にはみ出し、ほぼ白紙の2枚目が
-   できてしまう。そのため @page 側に本物の余白を持たせ、シート側は
-   実際に印刷できる範囲より十分小さい高さ(安全マージン付き)にしている。 */
+   紙の端ぴったりまで使う設計にしている以上、これは避けられないので、
+   Chromeの印刷ダイアログで「余白:なし」「ヘッダーとフッター:オフ」に
+   してもらう前提とする(提出はPDFのみで、実際の紙には印刷しないため
+   プリンタが物理的に印刷できない端の領域は考慮しなくてよい)。 */
 @media print{
-  /* シート自身が40px(10.6mm)の余白を持つようになったため、@page 側は
-     その分減らす。合計の紙端からの余白は 4+10.6 = 約14.6mm で従来と同等。 */
-  @page{size:A4;margin:5mm 4mm}
+  /* 紙の端まで design を届かせるため @page 側の余白は持たせない。
+     紙端から本文までの余白は #invoiceSheet 自身の padding だけで作る
+     (画面プレビューとまったく同じ作り方にする)。 */
+  @page{size:A4;margin:0}
   html,body{background:#fff!important}
   /* 紙の質感(repeating-linear-gradient)は印刷時には切る。
      完全に透明なので見た目には何も失われないが、これは請求書の背景に
@@ -681,26 +736,29 @@ footer.foot{
                 border-radius:0!important;overflow:visible!important}
   .sheet-scaler{transform:none!important;width:auto!important;height:auto!important}
   #printArea{position:static!important}
-  /* 以前はここで padding:0 / min-height:0 にして、紙の余白は @page 側だけで
-     作っていた。しかしそれだと「画面では余白だった場所に、印刷では本文が来る」
-     状態になり、余白に置いた装飾(帯・枠線・発行日)が本文と重なってしまう。
-     そこで印刷でもシート自身に余白と最低の高さを持たせ、@page の余白を
-     その分減らして相殺する。画面と印刷でレイアウトがほぼ一致するので、
-     装飾の位置を一度考えれば両方で成立する。
+  /* シートを「A4の紙そのもの」と同じ大きさにする。
+     画面プレビューの #invoiceSheet は 794x1123px = ちょうどA4(210x297mm)で
+     作られているので、印刷でも同じ寸法を指定すれば、プレビューで見た絵が
+     そのままPDFになる(padding も .inv-meta も画面の指定をそのまま使うため、
+     ここでは上書きしない)。
 
-     ・本文幅  = 202mm - 10.6mm×2 = 180.8mm(従来182.0mmとほぼ同じ)
-     ・最低高  = 270mm。印刷可能高287mmに収まるので1枚に収まり、かつ
-                下端の装飾を置くための余白が紙の底まで確保される。
-                min-heightなので品目が多ければ自然に2枚目へ続く。 */
-  #invoiceSheet{width:100%;max-width:202mm;min-height:270mm;height:auto;
-                padding:40px;margin:0;
+     テーマの装飾はどれもシート自身の外周を基準に置いている
+     (舞台裏の帯 = bottom:0/right:0、木漏れ日の縁 = border、緞帳 = top:0)。
+     シート＝紙になったことで、これらが紙の端ぴったりまで届く。
+
+     ・幅   = 210mm(A4ちょうど)
+     ・最低高 = 296.5mm。A4の297mmに対して0.5mmだけ引いてある。
+               ブラウザは印刷時の寸法計算に端数が出るため、297mmちょうどだと
+               1本の髪の毛ほどはみ出しただけで「ほぼ白紙の2枚目」ができてしまう。
+               0.5mm(約2px)は見た目にはまず分からないので、
+               2枚目事故を防ぐ保険として残している。
+               min-heightなので品目が多ければ自然に2枚目へ続く。 */
+  #invoiceSheet{width:210mm;max-width:210mm;min-height:296.5mm;height:auto;
+                margin:0;
                 /* 万一テーマ変数が読めない環境でも紙が白・文字が黒になるよう
                    フォールバック値を添えておく(黒紙になる事故の最後の砦) */
                 background-color:var(--sheet-bg,#fff)!important;
                 color:var(--sheet-text,#1a1a1a)!important}
-  /* 発行日ブロックはシートの余白の内側へ(画面と同じ考え方)。
-     これで緞帳テーマの上部の帯とも重ならない。 */
-  #invoiceSheet .inv-meta{top:40px!important;right:40px!important}
   /* 品目表が2ページにまたがるときの体裁 */
   #invoiceSheet table.inv-items tr{page-break-inside:avoid}
   #invoiceSheet table.inv-totals{page-break-inside:avoid}
@@ -741,7 +799,7 @@ footer.foot{
 <!-- ================= STEP 1 ================= -->
 <section class="step" id="step1">
   <div class="step-head"><div class="num">一</div><h2>あなたの情報(差出人)</h2></div>
-  <p class="step-desc">「誰からの請求か」を伝える部分です。この欄の内容は、この端末のこのブラウザに自動で保存され、次回開いたときも残ります。<button type="button" id="clearSavedBtn" style="border:none;background:none;color:var(--shu);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit">保存内容を削除</button></p>
+  <p class="step-desc">「誰からの請求か」を伝える部分です。<b>既定では端末に保存しません。</b><br><label class="checkline" style="display:inline-flex;margin-top:5px"><input type="checkbox" id="saveIssuerChk">この端末・このブラウザに発行者情報と口座情報を保存する</label> <button type="button" id="loadSavedBtn" hidden style="border:none;background:none;color:var(--ink-soft);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit">保存内容を読み込む</button> <button type="button" id="clearSavedBtn" hidden style="border:none;background:none;color:var(--shu);font-size:12px;text-decoration:underline;cursor:pointer;padding:0;font-family:inherit">保存内容を削除</button></p>
 
   <div class="field">
     <label for="fromName">お名前<span class="req">必須</span></label>
@@ -915,7 +973,7 @@ footer.foot{
 
   <div class="field">
     <label class="checkline"><input type="checkbox" id="withholdChk" checked>源泉徴収(10.21%)を差し引いて請求する</label>
-    <div class="hint">報酬(出演料など)の<b>税込額×10.21%</b>で計算します。区分が「立替」「対象外」の品目は源泉の対象になりません。</div>
+    <div class="hint">源泉徴収の要否は、報酬の内容と支払者との取り決めを確認してから選んでください。チェック時は、報酬(出演料など)の<b>税込総額×10.21%</b>で計算します。区分が「立替」「対象外」の品目は源泉の対象になりません。</div>
   </div>
 
   <details class="guide">
@@ -974,8 +1032,17 @@ footer.foot{
     <button type="button" class="btn primary" id="printBtn">🖨 印刷 / PDF保存</button>
     <button type="button" class="btn outline" id="pngBtn">🖼 画像で保存(PNG)</button>
   </div>
-  <p class="save-note">PDFにしたいときは「印刷 / PDF保存」→ 送信先(プリンター)で「PDFに保存」を選びます。<br>ミサキカクへの提出はPDFのみです。PNGは控えの保管など、それ以外の用途にお使いください。<br>
-  もし2ページに分かれてしまう場合は、印刷画面の「詳細設定」で<b>「ヘッダーとフッター」のチェックを外す</b>と直ることがあります。</p>
+  <p class="save-note">PDFにしたいときは「印刷 / PDF保存」→ 送信先(プリンター)で「PDFに保存」を選びます。<br>ミサキカクへの提出はPDFのみです。PNGは控えの保管など、それ以外の用途にお使いください。</p>
+
+  <div class="print-setting">
+    <div class="ps-head">🖨 はじめの1回だけ、印刷画面で設定してください</div>
+    <p class="ps-lead">印刷画面の右側にある「<b>詳細設定</b>」を開いて、次の2つを変えます。デザインが紙の端まで届き、余計な白い余白や文字が入らなくなります。</p>
+    <ul class="ps-list">
+      <li><b>余白</b><span class="ps-val">「なし」</span>を選ぶ</li>
+      <li><b>ヘッダーとフッター</b><span class="ps-val">チェックを外す</span></li>
+    </ul>
+    <p class="ps-note">この設定はブラウザが覚えてくれるので、2回目からは不要です。<br>設定しないと、紙の端に日付やURLが印字されたり、余白が広くなったり、2ページに分かれたりすることがあります。</p>
+  </div>
 </section>
 
 <!-- ================= STEP 5 ================= -->
@@ -994,7 +1061,7 @@ footer.foot{
 
 <footer class="foot">
   入力内容はこの端末の中だけで処理され、どこにも送信されません。<br>
-  「あなたの情報」はこのブラウザに自動保存されますが、それ以外(宛先・品目・金額など)はページを閉じると消えるので、作ったら必ず保存してください。
+  「あなたの情報」は、保存を明示的に選んだ場合だけこのブラウザに保存されます。それ以外(宛先・品目・金額など)はページを閉じると消えるので、作ったら必ず保存してください。
 </footer>
 </div>
 
@@ -1212,6 +1279,12 @@ function lineAmount(it){
   if(!isFinite(q) || !isFinite(p)) return null;
   return Math.round(q*p);
 }
+/* 返金・相殺のマイナス金額を許可する。数値でない入力は計算に使わない。 */
+function readFiniteNumber(value){
+  if(value === "") return "";
+  const n = Number(value);
+  return Number.isFinite(n) ? n : "";
+}
 function renderItems(){
   const box = $("itemRows");
   box.innerHTML = "";
@@ -1229,9 +1302,9 @@ function renderItems(){
         <div class="ic-f"><label>区分<span class="cls-hint">※消費税率です。源泉徴収は自動計算されます</span></label>
           <select data-i="${i}" data-k="cls">${opts}</select></div>
         <div class="ic-f"><label>数量</label>
-          <input type="number" data-i="${i}" data-k="qty" value="${esc(it.qty)}" min="0" step="1" inputmode="numeric"></div>
+          <input type="number" data-i="${i}" data-k="qty" value="${esc(it.qty)}" step="1" inputmode="numeric"></div>
         <div class="ic-f"><label>単価(円)</label>
-          <input type="number" data-i="${i}" data-k="price" value="${esc(it.price)}" min="0" step="1" inputmode="numeric" placeholder="10000"></div>
+          <input type="number" data-i="${i}" data-k="price" value="${esc(it.price)}" step="1" inputmode="numeric" placeholder="10000"></div>
         <div class="ic-amt"><label>金額</label>
           <span class="v">${lineAmount(it)!==null ? yen(lineAmount(it)) : "－"}</span></div>
       </div>`;
@@ -1246,7 +1319,7 @@ function onItemEdit(e){
     items[i].tpl = null; // 手入力されたら自動差し込みの対象から外す
   }
   else if(k==="cls") items[i].cls = e.target.value;
-  else items[i][k] = e.target.value===""?"":Number(e.target.value);
+  else items[i][k] = readFiniteNumber(e.target.value);
   // update amount display of this card only
   const card = e.target.closest(".item-card");
   const it = items[i];
@@ -1333,15 +1406,19 @@ function calc(){
     else rewardRaw += a;
   });
 
+  // 正負どちらの精算でも、端数処理の方向を対称にする。
+  const floorTax = n => n < 0 ? -Math.floor(-n) : Math.floor(n);
   // 報酬部分:消費税モードに従う
   let rewEx, rewTax, rewIn;
-  if(taxMode==="excl"){ rewEx = rewardRaw; rewTax = Math.floor(rewEx*0.10); rewIn = rewEx+rewTax; }
-  else if(taxMode==="incl"){ rewIn = rewardRaw; rewTax = Math.floor(rewIn*10/110 + 1e-9); rewEx = rewIn - rewTax; }
+  if(taxMode==="excl"){ rewEx = rewardRaw; rewTax = floorTax(rewEx*0.10); rewIn = rewEx+rewTax; }
+  else if(taxMode==="incl"){ rewIn = rewardRaw; rewTax = floorTax(rewIn*10/110 + (rewIn >= 0 ? 1e-9 : -1e-9)); rewEx = rewIn - rewTax; }
   else { rewEx = rewardRaw; rewTax = 0; rewIn = rewardRaw; }
 
-  // 立替:実費税込のまま(内税額は参考表示用)
-  const tateTax10 = Math.floor(tate10*10/110 + 1e-9);
-  const tateTax8  = Math.floor(tate8*8/108 + 1e-9);
+  // 立替・デポジットは発行者自身の課税売上ではないため、消費税額は請求書の税額に含めない。
+  // ただし立替の中にいくら消費税が含まれるかは、受け取る側が経費処理する際に
+  // 必要になるため、税額とは別枠の「参考値」として算出だけしておく。
+  const tateTax10 = floorTax(tate10*10/110 + (tate10 >= 0 ? 1e-9 : -1e-9));
+  const tateTax8  = floorTax(tate8*8/108  + (tate8  >= 0 ? 1e-9 : -1e-9));
   const tate = tate10 + tate8 + t0;
 
   const total = rewIn + tate; // 源泉差引前の請求総額
@@ -1351,8 +1428,8 @@ function calc(){
   if(withhold){
     const base = rewIn;
     wh = base <= 1000000
-      ? Math.floor(base*0.1021)
-      : Math.floor((base-1000000)*0.2042) + 102100;
+      ? floorTax(base*0.1021)
+      : floorTax((base-1000000)*0.2042) + 102100;
   }
   const due = total - wh;
   const raw = rewardRaw + tate;
@@ -1364,28 +1441,31 @@ function renderCalc(c){
   let html = "";
   if(c.taxMode==="incl"){
     html += `<div class="row"><span>小計(税込)</span><span class="num">${yen(c.total)}</span></div>`;
-    if(c.rewTax + c.tateTax10 > 0)
-      html += `<div class="row" style="color:var(--muted)"><span>(うち消費税10%)</span><span class="num">${yen(c.rewTax + c.tateTax10)}</span></div>`;
-    if(c.tateTax8 > 0)
-      html += `<div class="row" style="color:var(--muted)"><span>(うち消費税8%)</span><span class="num">${yen(c.tateTax8)}</span></div>`;
+    if(c.rewIn !== 0)
+      html += `<div class="row" style="color:var(--muted)"><span>(10%対象の税込対価)</span><span class="num">${yen(c.rewIn)}</span></div>`;
+    if(c.rewTax !== 0)
+      html += `<div class="row" style="color:var(--muted)"><span>(うち消費税10%)</span><span class="num">${yen(c.rewTax)}</span></div>`;
   } else if(c.taxMode==="excl"){
     html += `<div class="row"><span>小計${c.tate>0?"":"(税抜)"}</span><span class="num">${yen(c.rewEx + c.tate)}</span></div>`;
+    if(c.rewEx !== 0)
+      html += `<div class="row" style="color:var(--muted)"><span>(10%対象の税抜対価)</span><span class="num">${yen(c.rewEx)}</span></div>`;
     html += `<div class="row"><span>消費税(10%)</span><span class="num">${yen(c.rewTax)}</span></div>`;
-    if(c.tate>0)
+    if(c.tate!==0)
       html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※立替金・デポジット(${yen(c.tate)})は実費・預り金のため消費税を加算していません</span><span></span></div>`;
   } else {
     html += `<div class="row"><span>小計</span><span class="num">${yen(c.total)}</span></div>`;
   }
-  if(tateOnly>0){
+  if(tateOnly!==0){
     html += `<div class="row" style="color:var(--muted)"><span>(うち立替金 ※源泉対象外)</span><span class="num">${yen(tateOnly)}</span></div>`;
-    if(c.taxMode==="excl"){
-      if(c.tateTax10>0)
-        html += `<div class="row" style="color:var(--muted)"><span>(立替分の消費税10%)</span><span class="num">${yen(c.tateTax10)}</span></div>`;
-      if(c.tateTax8>0)
-        html += `<div class="row" style="color:var(--muted)"><span>(立替分の消費税8%)</span><span class="num">${yen(c.tateTax8)}</span></div>`;
-    }
+    /* 立替に含まれる消費税は、上の「消費税10%」(発行者の課税売上分)とは
+       性質が違うため税額には合算しない。ただし受け取る側の経費処理に
+       必要なので、税率ごとに参考値として並べる。 */
+    if(c.tateTax10!==0)
+      html += `<div class="row" style="color:var(--muted)"><span>(参考:立替分の消費税10%)</span><span class="num">${yen(c.tateTax10)}</span></div>`;
+    if(c.tateTax8!==0)
+      html += `<div class="row" style="color:var(--muted)"><span>(参考:立替分の消費税8%)</span><span class="num">${yen(c.tateTax8)}</span></div>`;
   }
-  if(c.t0>0)
+  if(c.t0!==0)
     html += `<div class="row" style="color:var(--muted)"><span>(うちデポジット返金 ※源泉対象外)</span><span class="num">${yen(c.t0)}</span></div>`;
   if(c.withhold)
     html += `<div class="row minus"><span>源泉徴収税額(${c.rewIn>1000000?"10.21%/20.42%":"10.21%"})</span><span class="num">△ ${yen(c.wh)}</span></div>`;
@@ -1438,28 +1518,28 @@ function renderSheet(c){
   let totals = "";
   if(c.taxMode==="incl"){
     totals += `<tr><td class="lbl">小計(税込)</td><td class="val">${yen(c.total)}</td></tr>`;
-    if(c.rewTax + c.tateTax10 > 0)
-      totals += `<tr><td class="lbl">(うち消費税10%)</td><td class="val">${yen(c.rewTax + c.tateTax10)}</td></tr>`;
-    if(c.tateTax8 > 0)
-      totals += `<tr><td class="lbl">(うち消費税8%)</td><td class="val">${yen(c.tateTax8)}</td></tr>`;
+    if(c.rewIn !== 0)
+      totals += `<tr><td class="lbl">10%対象の税込対価</td><td class="val">${yen(c.rewIn)}</td></tr>`;
+    if(c.rewTax !== 0)
+      totals += `<tr><td class="lbl">(うち消費税10%)</td><td class="val">${yen(c.rewTax)}</td></tr>`;
   } else if(c.taxMode==="excl"){
     totals += `<tr><td class="lbl">小計${c.tate>0?"":"(税抜)"}</td><td class="val">${yen(c.rewEx + c.tate)}</td></tr>`;
+    if(c.rewEx !== 0)
+      totals += `<tr><td class="lbl">10%対象の税抜対価</td><td class="val">${yen(c.rewEx)}</td></tr>`;
     totals += `<tr><td class="lbl">消費税(10%)</td><td class="val">${yen(c.rewTax)}</td></tr>`;
   } else {
     totals += `<tr><td class="lbl">小計</td><td class="val">${yen(c.total)}</td></tr>`;
   }
-  if(tateOnly>0){
+  if(tateOnly!==0){
     totals += `<tr><td class="lbl">(うち立替金)</td><td class="val">${yen(tateOnly)}</td></tr>`;
-    /* 税抜モードのときは立替の内税がどこにも出ていないので、税率ごとに参考表示する。
-       (税込モードでは上の小計ブロックに含めて表示済み) */
-    if(c.taxMode==="excl"){
-      if(c.tateTax10>0)
-        totals += `<tr><td class="lbl">(立替分の消費税10%)</td><td class="val">${yen(c.tateTax10)}</td></tr>`;
-      if(c.tateTax8>0)
-        totals += `<tr><td class="lbl">(立替分の消費税8%)</td><td class="val">${yen(c.tateTax8)}</td></tr>`;
-    }
+    /* 立替の内税は発行者の課税売上ではないので税額には含めない。
+       「参考」と明記したうえで、税率ごとに内訳を示す。 */
+    if(c.tateTax10!==0)
+      totals += `<tr><td class="lbl">(参考:立替分の消費税10%)</td><td class="val">${yen(c.tateTax10)}</td></tr>`;
+    if(c.tateTax8!==0)
+      totals += `<tr><td class="lbl">(参考:立替分の消費税8%)</td><td class="val">${yen(c.tateTax8)}</td></tr>`;
   }
-  if(c.t0>0)
+  if(c.t0!==0)
     totals += `<tr><td class="lbl">(うちデポジット返金)</td><td class="val">${yen(c.t0)}</td></tr>`;
   if(c.withhold) totals += `<tr><td class="lbl">源泉徴収税額</td><td class="val">△ ${yen(c.wh)}</td></tr>`;
   totals += `<tr class="grand"><td class="lbl">差引ご請求金額</td><td class="val">${yen(c.due)}</td></tr>`;
@@ -1500,8 +1580,10 @@ function renderSheet(c){
       <thead><tr><th style="width:50%">内容</th><th style="width:11%">区分</th><th style="width:8%">数量</th><th style="width:15%">単価(円)</th><th style="width:16%">金額(円)</th></tr></thead>
       <tbody>${itemRowsHtml}${emptyHtml}</tbody>
     </table>
-    <table class="inv-totals"><tbody>${totals}</tbody></table>
-    ${bankParts.length ? `<div class="inv-bank"><div class="bank-title">お振込先</div>${bankParts.join("<br>")}</div>` : ""}
+    <div class="inv-summary-area">
+      <table class="inv-totals"><tbody>${totals}</tbody></table>
+      ${bankParts.length ? `<div class="inv-bank"><div class="bank-title">お振込先</div>${bankParts.join("<br>")}</div>` : ""}
+    </div>
     ${$("notes").value ? `<div class="inv-notes"><div class="notes-title">備考</div>${esc($("notes").value)}</div>` : ""}
     ${$("greetMsg").value.trim() ? `<div class="inv-greetmsg">${esc($("greetMsg").value.trim())}</div>` : ""}
   `;
@@ -1749,6 +1831,29 @@ function buildFileBaseName(){
   return `${dateStr}_${name}_${amount}`;
 }
 
+/* PNG保存に必要なライブラリは、PNGを押すまで読み込まない。
+   版を固定し、SRIで改ざんを検知する。オフラインでもPDF保存は常に利用できる。 */
+const HTML2CANVAS_URL = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+const HTML2CANVAS_SRI = "sha512-BNaRQnYJYiPSqHHDb58B0yaPfCu+Wgds8Gp/gU33kqBtgNS4tSPHuGibyoeqMV/TJlSKda6FXzoEyYGjTe+vXA==";
+let html2canvasLoader = null;
+function loadHtml2Canvas(){
+  if(typeof html2canvas === "function") return Promise.resolve(html2canvas);
+  if(html2canvasLoader) return html2canvasLoader;
+  html2canvasLoader = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = HTML2CANVAS_URL;
+    script.integrity = HTML2CANVAS_SRI;
+    script.crossOrigin = "anonymous";
+    script.referrerPolicy = "no-referrer";
+    script.onload = () => typeof html2canvas === "function"
+      ? resolve(html2canvas)
+      : reject(new Error("PNG保存ライブラリを読み込めませんでした。"));
+    script.onerror = () => reject(new Error("PNG保存ライブラリを読み込めませんでした。ネット接続をご確認ください。"));
+    document.head.appendChild(script);
+  }).catch(e => { html2canvasLoader = null; throw e; });
+  return html2canvasLoader;
+}
+
 $("pngBtn").addEventListener("click", async () => {
   const btn = $("pngBtn");
   btn.disabled = true; btn.textContent = "作成中…";
@@ -1759,7 +1864,8 @@ $("pngBtn").addEventListener("click", async () => {
   scaler.style.transform = "none";
   scaler.style.height = "auto";
   try{
-    const canvas = await html2canvas($("invoiceSheet"), {
+    const capture = await loadHtml2Canvas();
+    const canvas = await capture($("invoiceSheet"), {
       /* backgroundColor はキャンバスの下地。テーマで紙色が変わるため、
          実際に適用されている紙色を読み取って渡す(読めなければ白)。
          これで、万一シート自身の背景描画が抜けても黒くはならない。 */
@@ -1800,7 +1906,7 @@ $("pngBtn").addEventListener("click", async () => {
       alert("画像を新しいタブで開きました。画像を長押しして「写真に追加」を選んで保存してください。");
     }
   }catch(e){
-    alert("画像の作成に失敗しました。もう一度お試しください。");
+    alert(e.message || "画像の作成に失敗しました。もう一度お試しください。");
   }finally{
     scaler.style.transform = keep.transform;
     scaler.style.height = keep.height;
@@ -1848,38 +1954,65 @@ document.addEventListener("pointerdown", restorePrintTitle, {capture:true});
 document.addEventListener("input", restorePrintTitle, {capture:true});
 
 /* ---------- 発行者情報の端末保存(localStorage) ----------
-   お名前・住所・連絡先・振込先など、公演ごとに変わらない情報だけを
-   この端末のブラウザに保存します。サーバーには一切送信されません。 */
+   口座情報を含むため、初期状態では保存しない。保存を明示的に選んだ場合だけ
+   この端末・このブラウザに保存する。 */
 const ISSUER_FIELDS = ["fromName","fromAddr","fromTel","fromMail","fromInvoiceNo","bankName","bankBranch","bankType","bankHolder"];
 const ISSUER_STORAGE_KEY = "invoiceTool_issuerInfo_v1";
+function hasSavedIssuerInfo(){
+  try{ return !!localStorage.getItem(ISSUER_STORAGE_KEY); }catch(e){ return false; }
+}
+function updateIssuerStorageControls(){
+  const exists = hasSavedIssuerInfo();
+  $("loadSavedBtn").hidden = !exists;
+  $("clearSavedBtn").hidden = !exists;
+}
 
 function saveIssuerInfo(){
+  if(!$("saveIssuerChk").checked) return;
   try{
     const data = {};
     ISSUER_FIELDS.forEach(id => { data[id] = $(id).value; });
     localStorage.setItem(ISSUER_STORAGE_KEY, JSON.stringify(data));
+    updateIssuerStorageControls();
   }catch(e){ /* プライベートブラウジング等で保存できない場合は何もしない */ }
 }
 function loadIssuerInfo(){
   try{
     const raw = localStorage.getItem(ISSUER_STORAGE_KEY);
-    if(!raw) return;
+    if(!raw) return false;
     const data = JSON.parse(raw);
     ISSUER_FIELDS.forEach(id => { if(data[id]) $(id).value = data[id]; });
-  }catch(e){ /* 読み込めない場合は無視して空欄のまま */ }
+    return true;
+  }catch(e){ return false; }
 }
 ISSUER_FIELDS.forEach(id => {
   $(id).addEventListener("input", saveIssuerInfo);
+});
+$("saveIssuerChk").addEventListener("change", () => {
+  if($("saveIssuerChk").checked){
+    saveIssuerInfo();
+  } else {
+    try{ localStorage.removeItem(ISSUER_STORAGE_KEY); }catch(e){}
+    updateIssuerStorageControls();
+  }
+});
+$("loadSavedBtn").addEventListener("click", () => {
+  if(loadIssuerInfo()){
+    $("saveIssuerChk").checked = true;
+    updateAll();
+  }
 });
 $("clearSavedBtn").addEventListener("click", () => {
   if(!confirm("この端末に保存されている「あなたの情報」を削除します。よろしいですか?")) return;
   try{ localStorage.removeItem(ISSUER_STORAGE_KEY); }catch(e){}
   ISSUER_FIELDS.forEach(id => { $(id).value = ""; });
+  $("saveIssuerChk").checked = false;
+  updateIssuerStorageControls();
   updateAll();
 });
 
 /* ---------- boot ---------- */
-loadIssuerInfo();
+updateIssuerStorageControls();
 renderItems();
 updateAll();
 setTimeout(scaleSheet, 300); // after fonts settle

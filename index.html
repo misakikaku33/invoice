@@ -663,19 +663,31 @@ footer.foot{
 #invoiceSheet table.inv-totals td{
   border:1px solid var(--muted);padding:5px 10px;font-size:12.5px;
 }
-#invoiceSheet table.inv-totals td.lbl{background:var(--sheet-muted-bg);font-weight:700;width:55%}
-#invoiceSheet table.inv-totals td.val{width:45%;text-align:right;font-variant-numeric:tabular-nums}
+#invoiceSheet table.inv-totals td.lbl{background:var(--sheet-muted-bg);font-weight:700;width:60%}
+#invoiceSheet table.inv-totals td.val{width:40%;text-align:right;font-variant-numeric:tabular-nums}
 #invoiceSheet table.inv-totals tr.grand td{font-weight:700;font-size:14px}
 #invoiceSheet .inv-bank{
   margin-top:20px;border:1px solid var(--muted);
-  padding:12px 16px;font-size:12.5px;width:fit-content;min-width:340px;
+  padding:12px 16px;font-size:12.5px;
+  /* 以前は width:fit-content;min-width:340px で「内容に応じて広がる箱」
+     だったが、今はグリッドの左列(61%)の中に置かれているので、その幅
+     ぴったりに固定する。銀行名や支店名がどれだけ長くても、この箱の
+     外(=右側の合計欄)へはみ出さない。
+     overflow-wrap:anywhere は、空白のない長い連続文字(英数字の店舗名や
+     長い口座番号など)でも、日本語と同じように強制的に折り返すための指定。
+     通常のCSSは英数字の「単語の途中」では折り返さないため、これが無いと
+     万一の長い文字列で箱からあふれる可能性が残っていた。 */
+  width:100%;min-width:0;overflow-wrap:anywhere;
 }
 #invoiceSheet .inv-summary-area{
-  /* 右:合計欄(39%)、左:振込先(61%)。品目表の列境界と正確にそろえる。 */
-  display:grid;grid-template-columns:61% 39%;align-items:stretch;margin-top:-1px;
+  /* 3列構成:左に振込先(45%)、中央に余白(16%)、右に合計欄(39%)。
+     間に余白を挟むことで振込先と合計欄が視覚的に分離され、整って見える。
+     右端の合計欄39%は、品目表の「数量+単価+金額」列(8+15+16=39%)と
+     一致するので、金額の列がまっすぐ下までそろう。 */
+  display:grid;grid-template-columns:45% 16% 39%;align-items:stretch;margin-top:-1px;
 }
 #invoiceSheet .inv-summary-area table.inv-totals{
-  grid-column:2;grid-row:1;width:100%;margin:0;
+  grid-column:3;grid-row:1;width:100%;margin:0;
 }
 #invoiceSheet .inv-summary-area .inv-bank{
   grid-column:1;grid-row:1;align-self:center;margin:0;
@@ -1512,7 +1524,7 @@ function renderSheet(c){
     totals += `<tr><td class="lbl">小計</td><td class="val">${yen(c.total)}</td></tr>`;
   }
   if(c.t0!==0)
-    totals += `<tr><td class="lbl">(うちデポジット返金)</td><td class="val">${yen(c.t0)}</td></tr>`;
+    totals += `<tr><td class="lbl">(デポジット返金)</td><td class="val">${yen(c.t0)}</td></tr>`;
   if(c.withhold) totals += `<tr><td class="lbl">源泉徴収税額</td><td class="val">△ ${yen(c.wh)}</td></tr>`;
   totals += `<tr class="grand"><td class="lbl">差引ご請求金額</td><td class="val">${yen(c.due)}</td></tr>`;
 

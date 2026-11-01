@@ -959,13 +959,13 @@ footer.foot{
     <label>品目(請求する内容)<span class="req">必須</span></label>
     <div id="itemRows"></div>
     <button type="button" class="add-row" id="addRowBtn">＋ 行を追加する</button>
-    <div class="hint">内容は「出演料(◯月◯日 公演名)」のように、いつ・何の仕事か分かるように書くのがコツです。</div>
+    <div class="hint">内容は「出演料(◯月◯日 公演名)」のように、いつ・何の仕事か分かるように書くのがコツです。<br><b>単価には、提示された報酬金額(税込)をそのまま入力してください。</b></div>
   </div>
 
   <details class="guide">
-    <summary>デポジットの返金がある場合</summary>
-    <p><b>デポジット(保証金・預かり金)の返金</b>を請求する場合は、区分を「デポジット返金」にしてください。これは物やサービスの対価ではなく<b>預けていたお金がそのまま返ってくるだけ</b>のものなので、消費税もかからず、源泉徴収の対象にもなりません。</p>
-    <p>なお、公演のために自腹で払った実費(小道具代・衣装材料代など)の立替精算は、<b>このツールでは扱っていません</b>。稽古場などで直接ご相談ください。</p>
+    <summary>立替精算・デポジットの書き方</summary>
+    <p><b>立替精算</b>:公演のために自腹で払った実費(小道具代・衣装材料代など)を返してもらう場合は、区分を「立替精算」にして、<b>レシートどおりの税込金額</b>をそのまま入力してください。実費の返金なので、消費税の上乗せも源泉徴収もありません。<br><b>レシート・領収証は、提出するメールに必ず添付してください。</b>金額の裏づけになります。</p>
+    <p><b>デポジット返金</b>:保証金・預かり金の返金は、区分を「デポジット返金」にしてください。預けていたお金が戻るだけなので、消費税も源泉徴収もかかりません。</p>
   </details>
 
   <div class="field">
@@ -1143,6 +1143,7 @@ applyDesignTheme(savedDesignTheme);
    使わず個別にやりとりしてもらう運用に統一する。 */
 const CLS = {
   r10:{label:"出演料・報酬(10%)", sheet:"10%"},
+  tadv:{label:"立替精算", sheet:"立替精算"},
   t0:{label:"デポジット返金", sheet:"対象外"}
 };
 /* tpl:プリセット由来の雛形文字列(「◯月◯日」を含む)。
@@ -1413,10 +1414,11 @@ function calc(){
   const withhold = $("withholdChk").checked;
 
   // 区分ごとの合計
-  let rewardRaw = 0, t0 = 0;
+  let rewardRaw = 0, t0 = 0, tadv = 0;
   items.forEach(it => {
     const a = lineAmount(it) || 0;
-    if(it.cls==="t0") t0 += a;
+    if(it.cls==="t0") t0 += a;          // デポジット返金(預り金)
+    else if(it.cls==="tadv") tadv += a; // 立替精算(実費の肩代わり)
     else rewardRaw += a;
   });
 
@@ -1428,9 +1430,11 @@ function calc(){
   else if(taxMode==="incl"){ rewIn = rewardRaw; rewTax = floorTax(rewIn*10/110 + (rewIn >= 0 ? 1e-9 : -1e-9)); rewEx = rewIn - rewTax; }
   else { rewEx = rewardRaw; rewTax = 0; rewIn = rewardRaw; }
 
-  // デポジットは預り金の返金であって発行者自身の課税売上ではないため、
-  // 消費税額は請求書の税額に含めない。
-  const tate = t0;
+  // デポジット返金(預り金)も立替精算(実費の肩代わり)も、発行者自身の
+  // 課税売上ではないため、消費税は加算せず・源泉の対象にもしない。
+  // どちらも税込金額をそのまま請求総額に足すだけ(内訳は請求書に書かず、
+  // 立替精算はレシート・領収証の現物で裏付ける運用)。
+  const tate = t0 + tadv;
 
   const total = rewIn + tate; // 源泉差引前の請求総額
 
@@ -1444,7 +1448,7 @@ function calc(){
   }
   const due = total - wh;
   const raw = rewardRaw + tate;
-  return {taxMode, raw, rewardRaw, rewEx, rewTax, rewIn, t0, tate, total, wh, due, withhold};
+  return {taxMode, raw, rewardRaw, rewEx, rewTax, rewIn, t0, tadv, tate, total, wh, due, withhold};
 }
 
 function renderCalc(c){
@@ -1460,11 +1464,17 @@ function renderCalc(c){
     if(c.rewEx !== 0)
       html += `<div class="row" style="color:var(--muted)"><span>(10%対象の税抜対価)</span><span class="num">${yen(c.rewEx)}</span></div>`;
     html += `<div class="row"><span>消費税(10%)</span><span class="num">${yen(c.rewTax)}</span></div>`;
-    if(c.tate!==0)
-      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※デポジット(${yen(c.tate)})は預り金のため消費税を加算していません</span><span></span></div>`;
+    if(c.tate!==0){
+      const noTax = [];
+      if(c.tadv!==0) noTax.push("立替精算");
+      if(c.t0!==0)   noTax.push("デポジット");
+      html += `<div class="row" style="color:var(--muted);font-size:12px"><span>※${noTax.join("・")}(${yen(c.tate)})は消費税の対象外のため加算していません</span><span></span></div>`;
+    }
   } else {
     html += `<div class="row"><span>小計</span><span class="num">${yen(c.total)}</span></div>`;
   }
+  if(c.tadv!==0)
+    html += `<div class="row" style="color:var(--muted)"><span>(うち立替精算 ※源泉対象外)</span><span class="num">${yen(c.tadv)}</span></div>`;
   if(c.t0!==0)
     html += `<div class="row" style="color:var(--muted)"><span>(うちデポジット返金 ※源泉対象外)</span><span class="num">${yen(c.t0)}</span></div>`;
   if(c.withhold)
@@ -1487,7 +1497,7 @@ const fmtDate = v => {
 function clsSheetLabel(cls, taxMode){
   const def = CLS[cls] || CLS.r10;
   if(taxMode !== "none") return def.sheet;
-  return {r10:"", t0:"対象外"}[cls] ?? "";
+  return {r10:"", tadv:"立替精算", t0:"対象外"}[cls] ?? "";
 }
 
 function renderSheet(c){
@@ -1525,6 +1535,8 @@ function renderSheet(c){
   } else {
     totals += `<tr><td class="lbl">小計</td><td class="val">${yen(c.total)}</td></tr>`;
   }
+  if(c.tadv!==0)
+    totals += `<tr><td class="lbl">(立替精算)</td><td class="val">${yen(c.tadv)}</td></tr>`;
   if(c.t0!==0)
     totals += `<tr><td class="lbl">(デポジット返金)</td><td class="val">${yen(c.t0)}</td></tr>`;
   if(c.withhold) totals += `<tr><td class="lbl">源泉徴収税額</td><td class="val">△ ${yen(c.wh)}</td></tr>`;
@@ -1728,11 +1740,19 @@ function mailActionsHtml(){
       <span>⚠️</span>
       <span><b>${lack.join("と")}が未入力です。</b>このままだとメール本文に載りません。STEP二・三に戻って入力してください。</span>
     </div>` : "";
+  /* 立替精算の行があるときは、レシート・領収証の添付を促す。
+     金額の裏づけになり、先方での確認がスムーズになる。 */
+  const c = calc();
+  const receiptHtml = c.tadv !== 0 ? `
+    <div class="sb-attach" style="border-color:var(--shu);color:var(--shu)">
+      <span>🧾</span>
+      <span><b>立替精算があります。</b>レシート・領収証(写真やPDF)を、この請求書と一緒にメールへ添付してください。金額の裏づけになります。</span>
+    </div>` : "";
   return `
     <div class="sb-attach">
       <span>📎</span>
       <span><b>先にPDFを保存してから</b>ボタンを押してください。メールの下書きは自動で作れますが、<b>PDFの添付だけは手作業</b>になります(メールの仕組み上、自動で添付できません)。</span>
-    </div>${lackHtml}
+    </div>${lackHtml}${receiptHtml}
     <div class="sb-actions">
       <button type="button" class="sb-btn primary" data-mail="app">✉️ メールの下書きを作る</button>
       <button type="button" class="sb-btn sub" data-mail="gmail">Gmailで開く</button>
@@ -1814,7 +1834,10 @@ function buildFileBaseName(){
   const dateStr = rawDate.replace(/-/g,"");
   const name = ($("fromName").value || "名前未入力").replace(/[\\/:*?"<>|]/g,"").trim() || "名前未入力";
   const amount = Math.round(c.due);
-  return `${dateStr}_${name}_${amount}`;
+  /* 先頭に「請求書」を付ける。受け取る側がフォルダ内で種類を一目で判別でき、
+     ファイル名で検索・並べ替えもしやすくなる(メール件名に「請求書」を入れて
+     いるのと同じ狙い)。 */
+  return `請求書_${dateStr}_${name}_${amount}`;
 }
 
 /* PNG保存に必要なライブラリは、PNGを押すまで読み込まない。
